@@ -1,19 +1,18 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
+import type {Metadata} from "next";
+import {JetBrains_Mono, Roboto_Slab} from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
+import {cn} from "@/lib/utils";
+import {Toaster} from "@/components/ui/sonner";
 import {TRPCReactProvider} from "@/trpc/client";
 
-const jetbrainsMonoHeading = JetBrains_Mono({subsets:['latin'],variable:'--font-heading'});
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const robotoSlab = Roboto_Slab({
   subsets: ["latin"],
+  variable: "--font-roboto-slab",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMonoHeading = JetBrains_Mono({
   subsets: ["latin"],
+  variable: "--font-jetbrains-heading",
 });
 
 export const metadata: Metadata = {
@@ -22,21 +21,27 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-  children,
-}: Readonly<{
+                                     children,
+                                   }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
     <html
       lang="en"
-      className={cn("h-full", "dark", "antialiased", geistSans.variable, geistMono.variable, jetbrainsMonoHeading.variable)}
+      className={cn(
+        "h-full",
+        "dark",
+        "antialiased",
+        robotoSlab.variable,
+        jetbrainsMonoHeading.variable,
+      )}
     >
-      <body className="min-h-full flex flex-col">
-      <TRPCReactProvider>
-
+    <body className="flex min-h-full flex-col">
+    <TRPCReactProvider>
       {children}
-      </TRPCReactProvider>
-      </body>
+    </TRPCReactProvider>
+    <Toaster/>
+    </body>
     </html>
   );
 }
