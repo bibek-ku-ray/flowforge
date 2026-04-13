@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="/_app (snapshot).ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="/_app (snapshot).ts" />
+              <option name="originalContent" value="import {createTRPCRouter, protectedProcedure} from '../init';&#10;import {prisma} from '@/lib/prisma';&#10;&#10;export const appRouter = createTRPCRouter({&#10;  getUsers: protectedProcedure.query(({ctx}) =&gt; {&#10;    return prisma.user.findMany({&#10;      where: {&#10;        id: ctx.auth.user.id&#10;      }&#10;    })&#10;  })&#10;});&#10;&#10;// export type definition of API&#10;export type AppRouter = typeof appRouter;" />
+              <option name="updatedContent" value="import {createTRPCRouter, protectedProcedure} from '../init';&#10;import {prisma} from '@/lib/prisma';&#10;&#10;export const appRouter = createTRPCRouter({&#10;  getUsers: protectedProcedure.query(({ctx}) =&gt;&#10;    prisma.user.findMany({&#10;      where: {&#10;        id: ctx.auth.user.id,&#10;      },&#10;    })&#10;  ),&#10;});&#10;&#10;export type AppRouter = typeof appRouter;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="/auth-client (snapshot).ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="/auth-client (snapshot).ts" />
+              <option name="originalContent" value="import { createAuthClient } from &quot;better-auth/react&quot;&#10;export const authClient = createAuthClient({&#10;    /** The base URL of the server (optional if you're using the same domain) */&#10;    baseURL: &quot;http://localhost:3000&quot;&#10;})&#10;&#10;export const { signIn, signUp, useSession } = createAuthClient()" />
+              <option name="updatedContent" value="import {createAuthClient} from &quot;better-auth/react&quot;;&#10;&#10;export const authClient = createAuthClient({&#10;  baseURL: &quot;http://localhost:3000&quot;,&#10;});&#10;&#10;export const {signIn, signUp, useSession} = createAuthClient();" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="/auth-utils (snapshot).ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="/auth-utils (snapshot).ts" />
+              <option name="originalContent" value="import {auth} from &quot;@/lib/auth&quot;;&#10;import {headers} from &quot;next/headers&quot;;&#10;import {redirect} from &quot;next/navigation&quot;;&#10;&#10;export const requireAuth = async () =&gt; {&#10;  const session = await auth.api.getSession({&#10;    headers: await headers()&#10;  })&#10;&#10;  if(!session) {&#10;    redirect(&quot;/login&quot;)&#10;  }&#10;&#10;  return session&#10;}&#10;&#10;export  const requireUnauth = async () =&gt; {&#10;  const session = await auth.api.getSession({&#10;    headers: await headers()&#10;  })&#10;&#10;  if(session) {&#10;    redirect(&quot;/&quot;)&#10;  }&#10;}" />
+              <option name="updatedContent" value="import {auth} from &quot;@/lib/auth&quot;;&#10;import {headers} from &quot;next/headers&quot;;&#10;import {redirect} from &quot;next/navigation&quot;;&#10;&#10;export const requireAuth = async () =&gt; {&#10;  const session = await auth.api.getSession({&#10;    headers: await headers(),&#10;  });&#10;&#10;  if (!session) {&#10;    redirect(&quot;/login&quot;);&#10;  }&#10;&#10;  return session;&#10;};&#10;&#10;export const requireUnauth = async () =&gt; {&#10;  const session = await auth.api.getSession({&#10;    headers: await headers(),&#10;  });&#10;&#10;  if (session) {&#10;    redirect(&quot;/&quot;);&#10;  }&#10;};" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="/page (snapshot).tsx">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="/page (snapshot).tsx" />
+              <option name="originalContent" value="import SignupForm from '@/features/auth/components/signup-form'&#10;import React from 'react'&#10;import {requireUnauth} from &quot;@/lib/auth-utils&quot;;&#10;&#10;const SignupPage = async () =&gt; {&#10;&#10;  await requireUnauth();&#10;  &#10;  return (&#10;    &lt;div&gt;&#10;        &lt;SignupForm/&gt;&#10;    &lt;/div&gt;&#10;  )&#10;}&#10;&#10;export default SignupPage" />
+              <option name="updatedContent" value="import SignupForm from '@/features/auth/components/signup-form';&#10;import {requireUnauth} from &quot;@/lib/auth-utils&quot;;&#10;&#10;export default async function SignupPage() {&#10;  await requireUnauth();&#10;&#10;  return &lt;SignupForm /&gt;;&#10;}" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="/query-client (snapshot).ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="/query-client (snapshot).ts" />
+              <option name="originalContent" value="import {&#10;  defaultShouldDehydrateQuery,&#10;  QueryClient,&#10;} from '@tanstack/react-query';&#10;&#10;export function makeQueryClient() {&#10;  return new QueryClient({&#10;    defaultOptions: {&#10;      queries: {&#10;        staleTime: 30 * 1000,&#10;      },&#10;      dehydrate: {&#10;        // serializeData: superjson.serialize,&#10;        shouldDehydrateQuery: (query) =&gt;&#10;          defaultShouldDehydrateQuery(query) ||&#10;          query.state.status === 'pending',&#10;      },&#10;      hydrate: {&#10;        // deserializeData: superjson.deserialize,&#10;      },&#10;    },&#10;  });&#10;}" />
+              <option name="updatedContent" value="import {&#10;  defaultShouldDehydrateQuery,&#10;  QueryClient,&#10;} from '@tanstack/react-query';&#10;&#10;export function makeQueryClient() {&#10;  return new QueryClient({&#10;    defaultOptions: {&#10;      queries: {&#10;        staleTime: 30 * 1000,&#10;      },&#10;      dehydrate: {&#10;        shouldDehydrateQuery: (query) =&gt;&#10;          defaultShouldDehydrateQuery(query) ||&#10;          query.state.status === 'pending',&#10;      },&#10;    },&#10;  });&#10;}" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="/utils (snapshot).ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="/utils (snapshot).ts" />
+              <option name="originalContent" value="import { clsx, type ClassValue } from &quot;clsx&quot;&#10;import { twMerge } from &quot;tailwind-merge&quot;&#10;&#10;export function cn(...inputs: ClassValue[]) {&#10;  return twMerge(clsx(inputs))&#10;}&#10;" />
+              <option name="updatedContent" value="import {clsx, type ClassValue} from &quot;clsx&quot;;&#10;import {twMerge} from &quot;tailwind-merge&quot;;&#10;&#10;export function cn(...inputs: ClassValue[]) {&#10;  return twMerge(clsx(inputs));&#10;}&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

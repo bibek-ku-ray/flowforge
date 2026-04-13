@@ -1,19 +1,14 @@
-"use client";
+import {requireAuth} from "@/lib/auth-utils";
+import {caller} from "@/trpc/server";
 
-import {Button} from "@/components/ui/button";
-import {authClient, useSession} from "@/lib/auth-client";
+export default async function Home() {
+  await requireAuth();
 
-export default function Home() {
-  const {data: session} = useSession();
-  if (!session) {
-    return <div>Loading...</div>;
-  }
+  const data = await caller.getUsers();
+
   return (
     <div>
-      Welcome {session.user.email}{" "}
-      {session.user && (
-        <Button onClick={() => authClient.signOut()}>Sign out</Button>
-      )}
+      <pre className="p-4">{JSON.stringify(data, null, 2)}</pre>
     </div>
   );
 }
