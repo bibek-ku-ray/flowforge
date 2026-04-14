@@ -1,5 +1,6 @@
 import {requireAuth} from "@/lib/auth-utils";
 import {caller} from "@/trpc/server";
+import SignoutButton from "@/features/auth/components/signout-button";
 
 export default async function Home() {
   await requireAuth();
@@ -9,6 +10,7 @@ export default async function Home() {
   return (
     <div>
       <pre className="p-4">{JSON.stringify(data, null, 2)}</pre>
+      <SignoutButton/>
     </div>
   );
 }

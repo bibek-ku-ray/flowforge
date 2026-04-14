@@ -1,8 +1,8 @@
 "use client";
 
-import { z } from "zod";
-import { FormProvider, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import {z} from "zod";
+import {FormProvider, useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
 import {
   Card,
   CardContent,
@@ -16,12 +16,13 @@ import {
   FieldError,
   FieldLabel,
 } from "@/components/ui/field";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
 import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import {authClient} from "@/lib/auth-client";
+import {useRouter} from "next/navigation";
+import {toast} from "sonner";
+import Image from "next/image";
 
 const signupSchema = z
   .object({
@@ -72,9 +73,14 @@ const SignupForm = () => {
   return (
     <div className="flex h-screen w-full items-center justify-center">
       <Card className="w-full sm:max-w-md">
-        <CardHeader>
-          <CardTitle>Create an account</CardTitle>
-          <CardDescription>Create an account to continue</CardDescription>
+        <CardHeader className={`flex gap-3 justify-between items-center`}>
+          <div>
+            <CardTitle>Create an account</CardTitle>
+            <CardDescription>Create an account to continue</CardDescription>
+          </div>
+          <div>
+            <Image src={`/logos/logo.png`} alt={`flowforge logo`} width={50} height={50}/>
+          </div>
         </CardHeader>
         <CardContent>
           <FormProvider {...form}>
@@ -87,6 +93,7 @@ const SignupForm = () => {
                     type="button"
                     disabled={isPending}
                   >
+                    <Image src="/logos/google.svg" alt="Google" width={20} height={20} className="mr-2"/>
                     Continue with Google
                   </Button>
                   <Button
@@ -95,6 +102,7 @@ const SignupForm = () => {
                     type="button"
                     disabled={isPending}
                   >
+                    <Image src="/logos/github.svg" alt="GitHub" width={20} height={20} className="mr-2"/>
                     Continue with GitHub
                   </Button>
                 </div>
@@ -111,7 +119,7 @@ const SignupForm = () => {
                         {...form.register("email")}
                       />
                     </FieldContent>
-                    <FieldError errors={[form.formState.errors.email]} />
+                    <FieldError errors={[form.formState.errors.email]}/>
                   </Field>
                   <Field data-invalid={!!form.formState.errors.password}>
                     <FieldLabel htmlFor="signup-password">Password</FieldLabel>
@@ -125,7 +133,7 @@ const SignupForm = () => {
                         {...form.register("password")}
                       />
                     </FieldContent>
-                    <FieldError errors={[form.formState.errors.password]} />
+                    <FieldError errors={[form.formState.errors.password]}/>
                   </Field>
                   <Field data-invalid={!!form.formState.errors.confirmPassword}>
                     <FieldLabel htmlFor="signup-confirm-password">
@@ -145,7 +153,7 @@ const SignupForm = () => {
                       errors={[form.formState.errors.confirmPassword]}
                     />
                   </Field>
-                  <Button className="w-full" type="submit" disabled={isPending}>
+                  <Button className="w-full cursor-pointer" type="submit" disabled={isPending}>
                     Create account
                   </Button>
                 </div>

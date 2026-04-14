@@ -22,6 +22,7 @@ import Link from "next/link";
 import {authClient} from "@/lib/auth-client";
 import {useRouter} from "next/navigation";
 import {toast} from "sonner";
+import Image from "next/image";
 
 const loginSchema = z.object({
   email: z.email("Please enter valid email"),
@@ -63,9 +64,14 @@ const LoginForm = () => {
   return (
     <div className="flex justify-center items-center h-screen w-full">
       <Card className="w-full sm:max-w-md">
-        <CardHeader>
-          <CardTitle>Welcome back</CardTitle>
-          <CardDescription>Login to continue</CardDescription>
+        <CardHeader className={`flex gap-3 justify-between items-center`}>
+          <div>
+            <CardTitle>Welcome back</CardTitle>
+            <CardDescription>Login to continue</CardDescription>
+          </div>
+          <div>
+            <Image src={`/logos/logo.png`} alt={`flowforge logo`} width={50} height={50}/>
+          </div>
         </CardHeader>
         <CardContent>
           <FormProvider {...form}>
@@ -74,18 +80,20 @@ const LoginForm = () => {
                 <div className="flex flex-col gap-4">
                   <Button
                     variant="outline"
-                    className="w-full"
+                    className="w-full cursor-pointer"
                     type="button"
                     disabled={isPending}
                   >
+                    <Image src="/logos/google.svg" alt="Google" width={20} height={20} className="mr-2"/>
                     Continue with Google
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full"
+                    className="w-full cursor-pointer"
                     type="button"
                     disabled={isPending}
                   >
+                    <Image src="/logos/github.svg" alt="GitHub" width={20} height={20} className="mr-2 "/>
                     Continue with GitHub
                   </Button>
                 </div>
@@ -117,7 +125,7 @@ const LoginForm = () => {
                     </FieldContent>
                     <FieldError errors={[form.formState.errors.password]}/>
                   </Field>
-                  <Button className="w-full" type="submit" disabled={isPending}>
+                  <Button className="w-full cursor-pointer" type="submit" disabled={isPending}>
                     Sign in
                   </Button>
                 </div>
@@ -125,7 +133,7 @@ const LoginForm = () => {
             </form>
           </FormProvider>
           <div className="text-center text-sm text-muted-foreground mt-4">
-            Don't have an account? <Link href="/signup" className="text-primary underline">Register</Link>
+            Don&#39;t have an account? <Link href="/signup" className="text-primary underline">Register</Link>
           </div>
         </CardContent>
       </Card>
