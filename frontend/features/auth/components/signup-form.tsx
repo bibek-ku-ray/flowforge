@@ -23,6 +23,9 @@ import {authClient} from "@/lib/auth-client";
 import {useRouter} from "next/navigation";
 import {toast} from "sonner";
 import Image from "next/image";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 
 const signupSchema = z
   .object({
@@ -39,6 +42,8 @@ type SignupFormValue = z.infer<typeof signupSchema>;
 
 const SignupForm = () => {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<SignupFormValue>({
     resolver: zodResolver(signupSchema),
@@ -124,14 +129,25 @@ const SignupForm = () => {
                   <Field data-invalid={!!form.formState.errors.password}>
                     <FieldLabel htmlFor="signup-password">Password</FieldLabel>
                     <FieldContent>
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder="••••••••"
-                        autoComplete="new-password"
-                        aria-invalid={!!form.formState.errors.password}
-                        {...form.register("password")}
-                      />
+                      <InputGroup>
+                        <InputGroupInput
+                          id="signup-password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          autoComplete="new-password"
+                          aria-invalid={!!form.formState.errors.password}
+                          {...form.register("password")}
+                        />
+                        <InputGroupAddon align="inline-end">
+                          <InputGroupButton
+                            size="icon-xs"
+                            onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                          >
+                            {showPassword ? <EyeOff /> : <Eye />}
+                          </InputGroupButton>
+                        </InputGroupAddon>
+                      </InputGroup>
                     </FieldContent>
                     <FieldError errors={[form.formState.errors.password]}/>
                   </Field>
@@ -140,14 +156,25 @@ const SignupForm = () => {
                       Confirm password
                     </FieldLabel>
                     <FieldContent>
-                      <Input
-                        id="signup-confirm-password"
-                        type="password"
-                        placeholder="••••••••"
-                        autoComplete="new-password"
-                        aria-invalid={!!form.formState.errors.confirmPassword}
-                        {...form.register("confirmPassword")}
-                      />
+                      <InputGroup>
+                        <InputGroupInput
+                          id="signup-confirm-password"
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          autoComplete="new-password"
+                          aria-invalid={!!form.formState.errors.confirmPassword}
+                          {...form.register("confirmPassword")}
+                        />
+                        <InputGroupAddon align="inline-end">
+                          <InputGroupButton
+                            size="icon-xs"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                          >
+                            {showConfirmPassword ? <EyeOff /> : <Eye />}
+                          </InputGroupButton>
+                        </InputGroupAddon>
+                      </InputGroup>
                     </FieldContent>
                     <FieldError
                       errors={[form.formState.errors.confirmPassword]}

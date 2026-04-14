@@ -23,6 +23,9 @@ import {authClient} from "@/lib/auth-client";
 import {useRouter} from "next/navigation";
 import {toast} from "sonner";
 import Image from "next/image";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 
 const loginSchema = z.object({
   email: z.email("Please enter valid email"),
@@ -34,6 +37,7 @@ type LoginFormValue = z.infer<typeof loginSchema>;
 const LoginForm = () => {
 
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginFormValue>({
     resolver: zodResolver(loginSchema),
@@ -114,14 +118,25 @@ const LoginForm = () => {
                   <Field data-invalid={!!form.formState.errors.password}>
                     <FieldLabel htmlFor="login-password">Password</FieldLabel>
                     <FieldContent>
-                      <Input
-                        id="login-password"
-                        type="password"
-                        placeholder="*********"
-                        autoComplete="current-password"
-                        aria-invalid={!!form.formState.errors.password}
-                        {...form.register("password")}
-                      />
+                      <InputGroup>
+                        <InputGroupInput
+                          id="login-password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="*********"
+                          autoComplete="current-password"
+                          aria-invalid={!!form.formState.errors.password}
+                          {...form.register("password")}
+                        />
+                        <InputGroupAddon align="inline-end">
+                          <InputGroupButton
+                            size="icon-xs"
+                            onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                          >
+                            {showPassword ? <EyeOff /> : <Eye />}
+                          </InputGroupButton>
+                        </InputGroupAddon>
+                      </InputGroup>
                     </FieldContent>
                     <FieldError errors={[form.formState.errors.password]}/>
                   </Field>

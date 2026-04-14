@@ -3,15 +3,6 @@
   <component name="CopilotDiffPersistence">
     <option name="pendingDiffs">
       <map>
-        <entry key="$PROJECT_DIR$/frontend/features/auth/components/signout-button.tsx">
-          <value>
-            <PendingDiffInfo>
-              <option name="filePath" value="$PROJECT_DIR$/frontend/features/auth/components/signout-button.tsx" />
-              <option name="originalContent" value="import {Button} from &quot;@/components/ui/button&quot;;&#10;import {authClient} from &quot;@/lib/auth-client&quot;;&#10;&#10;function SignoutButton() {&#10;  return (&#10;    &lt;div&gt;&#10;      &lt;Button onClick={() =&gt; authClient.signOut()}&gt;Sign out&lt;/Button&gt;&#10;    &lt;/div&gt;&#10;  );&#10;}&#10;&#10;export default SignoutButton;" />
-              <option name="updatedContent" value="&quot;use client&quot;;&#10;&#10;import {Button} from &quot;@/components/ui/button&quot;;&#10;import {authClient} from &quot;@/lib/auth-client&quot;;&#10;&#10;function SignoutButton() {&#10;  return (&#10;    &lt;div&gt;&#10;      &lt;Button onClick={() =&gt; authClient.signOut()}&gt;Sign out&lt;/Button&gt;&#10;    &lt;/div&gt;&#10;  );&#10;}&#10;&#10;export default SignoutButton;" />
-            </PendingDiffInfo>
-          </value>
-        </entry>
         <entry key="/_app (snapshot).ts">
           <value>
             <PendingDiffInfo>
