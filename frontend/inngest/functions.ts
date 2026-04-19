@@ -10,5 +10,18 @@ export const processTask = inngest.createFunction(
     await step.sleep("pause", "1s");
 
     return { message: `Task ${event.data.id} complete`, result };
-  }
+  },
+);
+
+export const helloworldTask = inngest.createFunction(
+  { id: "helloworld-task", triggers: { event: "test/helloworld" } },
+  async ({ event, step }) => {
+    const result = await step.run("handle-task", async () => {
+      return { processed: true, id: event.data.id };
+    });
+
+    await step.sleep("pause", "1s");
+
+    return { message: `Task ${event.data.id} complete`, result };
+  },
 );

@@ -6,6 +6,7 @@ import SignoutButton from "@/features/auth/components/signout-button";
 import { useTRPC } from "@/trpc/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function Home() {
   // await requireAuth();
@@ -19,7 +20,8 @@ export default function Home() {
 
   const mutation = useMutation(trpc.createWorkflow.mutationOptions({
     onSuccess: () => {
-      queryClient.invalidateQueries(trpc.getWorkflows.queryOptions())
+      // queryClient.invalidateQueries(trpc.getWorkflows.queryOptions())
+      toast.success("Job queued")
     }
   }))
 
