@@ -1,9 +1,20 @@
-import React from 'react'
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { useTRPC } from "@/trpc/client";
+import { useMutation } from "@tanstack/react-query";
 
 const Page = () => {
-  return (
-    <div>Page</div>
-  )
-}
+  const trpc = useTRPC();
+  const testAi = useMutation(trpc.testAi.mutationOptions());
 
-export default Page 
+  return (
+    <div>
+      Page.
+      <Button onClick={() => testAi.mutate()}>Test AI</Button>
+      <p>{JSON.stringify(testAi.data, null, 2)}</p>
+    </div>
+  );
+};
+
+export default Page;
