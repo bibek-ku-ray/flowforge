@@ -31,7 +31,15 @@ export const appRouter = createTRPCRouter({
       success: true,
       message: text
     }
+  }),
+  testAiInngest: protectedProcedure.mutation(async () => {
+    await inngest.send({
+      name: "execute/ai",
+
+    })
+    return { success: true, message: "AI execution queued" }
   })
+
 });
 
 export type AppRouter = typeof appRouter;

@@ -1,27 +1,17 @@
+import { generateText } from "ai";
 import { inngest } from "./client";
+import { openai } from "@ai-sdk/openai";
 
-export const processTask = inngest.createFunction(
-  { id: "process-task", triggers: { event: "app/task.created" } },
+export const execute = inngest.createFunction(
+  { id: "execute-ai", triggers: { event: "execute/ai" } },
+
   async ({ event, step }) => {
-    const result = await step.run("handle-task", async () => {
-      return { processed: true, id: event.data.id };
+    const { steps } = await step.ai.wrap("openai-generate-text", generateText, {
+      model: openai("gpt-5-nano"),
+      system: "You are a helpful assistant",
+      prompt: "What is 4-9?",
     });
 
-    await step.sleep("pause", "1s");
-
-    return { message: `Task ${event.data.id} complete`, result };
-  },
-);
-
-export const helloworldTask = inngest.createFunction(
-  { id: "helloworld-task", triggers: { event: "test/helloworld" } },
-  async ({ event, step }) => {
-    const result = await step.run("handle-task", async () => {
-      return { processed: true, id: event.data.id };
-    });
-
-    await step.sleep("pause", "1s");
-
-    return { message: `Task ${event.data.id} complete`, result };
+    return { message: "AI execution complete", steps };
   },
 );
