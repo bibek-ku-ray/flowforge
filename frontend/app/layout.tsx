@@ -1,9 +1,10 @@
-import type {Metadata} from "next";
-import {JetBrains_Mono, Roboto_Slab} from "next/font/google";
+import type { Metadata } from "next";
+import { JetBrains_Mono, Roboto_Slab } from "next/font/google";
 import "./globals.css";
-import {cn} from "@/lib/utils";
-import {Toaster} from "@/components/ui/sonner";
-import {TRPCReactProvider} from "@/trpc/client";
+import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/sonner";
+import { TRPCReactProvider } from "@/trpc/client";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const robotoSlab = Roboto_Slab({
   subsets: ["latin"],
@@ -36,7 +37,7 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <TRPCReactProvider>
-          {children}
+          <TooltipProvider>{children}</TooltipProvider>
         </TRPCReactProvider>
         <Toaster />
       </body>
