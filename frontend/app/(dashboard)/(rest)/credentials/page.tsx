@@ -1,7 +1,9 @@
-const Page = () => {
-  return (
-    <div>Cr Page</div>
-  )
-}
+import { requireAuth } from "@/lib/auth-utils";
 
-export default Page
+const Page = async () => {
+  await requireAuth();
+
+  return <div>Cr Page</div>;
+};
+
+export default Page;

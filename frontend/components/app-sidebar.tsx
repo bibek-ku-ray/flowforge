@@ -9,6 +9,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 import {
@@ -49,14 +51,14 @@ const menuItems = [
 export function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname();
-
+  const { state } = useSidebar();
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild className="gap-x-4 h-10 px-4">
+        <div className="flex items-center justify-between gap-x-2 w-full">
+          {state === "expanded" && (
+            <SidebarMenuButton asChild className="gap-x-4 h-10 px-4 flex-1">
               <Link href="/workflows" prefetch>
                 <Image
                   src="/logos/logo.png"
@@ -67,8 +69,9 @@ export function AppSidebar() {
                 <span className="font-semibold">Flowforge</span>
               </Link>
             </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+          )}
+          <SidebarTrigger className={state === "expanded" ? "" : "w-full"} />
+        </div>
       </SidebarHeader>
       <SidebarContent>
         {menuItems.map((group) => (
@@ -101,7 +104,6 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip={`Upgrade`}
@@ -132,17 +134,16 @@ export function AppSidebar() {
                 authClient.signOut({
                   fetchOptions: {
                     onSuccess: () => {
-                      router.push("/login")
-                    }
-                  }
-                })
+                      router.push("/login");
+                    },
+                  },
+                });
               }}
             >
               <LogOutIcon className="h-4 w-4" />
               Sign out
             </SidebarMenuButton>
           </SidebarMenuItem>
-          
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
