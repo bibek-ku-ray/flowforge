@@ -1,4 +1,4 @@
-import { createTRPCRouter, protectedProcedure } from '../init';
+import { createTRPCRouter, protectedProcedure, premiumProcedure } from '../init';
 import { prisma } from '@/lib/prisma';
 import { inngest } from "@/inngest/client";
 import { openai } from '@ai-sdk/openai';
@@ -22,7 +22,7 @@ export const appRouter = createTRPCRouter({
       message: "Job queued"
     }
   }),
-  testAi: protectedProcedure.mutation(async () => {
+  testAi: premiumProcedure.mutation(async () => {
     const {text} = await generateText({
       model: openai('gpt-5-nano'),
       prompt: 'How many time MI and CSK have won IPL',

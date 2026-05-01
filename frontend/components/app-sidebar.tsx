@@ -118,7 +118,7 @@ export function AppSidebar() {
                 }}
               >
                 <StarIcon className="h-4 w-4" />
-                Upgrade
+                Upgrade to Pro
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
