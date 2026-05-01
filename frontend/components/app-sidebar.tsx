@@ -12,6 +12,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useHasActiveSubscription } from "@/features/subscriptions/hooks/use-subscription";
 import { authClient } from "@/lib/auth-client";
 import {
   Clock12Icon,
@@ -24,6 +25,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { isLabelContentAFunction } from "recharts/types/component/Label";
 
 const menuItems = [
   {
@@ -52,6 +54,8 @@ export function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { state } = useSidebar();
+
+  const { hasActiveSubscription, isLoading } = useHasActiveSubscription();
 
   return (
     <Sidebar collapsible="icon">
@@ -104,22 +108,28 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip={`Upgrade`}
-              className="gap-x-4 h-10 px-4"
-              onClick={() => {}}
-            >
-              <StarIcon className="h-4 w-4" />
-              Upgrade
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {!hasActiveSubscription && !isLoading && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip={`Upgrade`}
+                className="gap-x-4 h-10 px-4"
+                onClick={() => {
+                  authClient.checkout({ slug: "pro" });
+                }}
+              >
+                <StarIcon className="h-4 w-4" />
+                Upgrade
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
 
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip={`Billing`}
               className="gap-x-4 h-10 px-4"
-              onClick={() => {}}
+              onClick={() => {
+                authClient.customer.portal();
+              }}
             >
               <CreditCardIcon className="h-4 w-4" />
               Billing
