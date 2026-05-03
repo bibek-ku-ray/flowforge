@@ -11,20 +11,14 @@ import { polarClient } from "@/lib/polar";
  * API route handler (where you pass the request headers).
  */
 export const createTRPCContext = async (_opts: { headers: Headers }) => {
-  // TODO: Get user from auth session
-  return { userId: "user_123" };
+  return {};
 };
 
 export const getQueryClient = cache(makeQueryClient);
 
 const t = initTRPC
   .context<Awaited<ReturnType<typeof createTRPCContext>>>()
-  .create({
-    /**
-     * @see https://trpc.io/docs/server/data-transformers
-     */
-    // transformer: superjson,
-  });
+  .create();
 
 export const createTRPCRouter = t.router;
 export const createCallerFactory = t.createCallerFactory;
@@ -41,6 +35,10 @@ export const protectedProcedure = baseProcedure.use(async ({ ctx, next }) => {
       message: "Unauthorized",
     });
   }
+
+  console.log('====================================');
+  console.log("CTX: " + {...ctx});
+  console.log('====================================');
 
   return next({ ctx: { ...ctx, auth: session } });
 });
