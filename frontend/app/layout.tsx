@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { TRPCReactProvider } from "@/trpc/client";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 const robotoSlab = Roboto_Slab({
   subsets: ["latin"],
@@ -37,7 +38,10 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <TRPCReactProvider>
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider>
+            {" "}
+            <NuqsAdapter>{children}</NuqsAdapter>{" "}
+          </TooltipProvider>
         </TRPCReactProvider>
         <Toaster />
       </body>

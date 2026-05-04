@@ -36,10 +36,6 @@ export const protectedProcedure = baseProcedure.use(async ({ ctx, next }) => {
     });
   }
 
-  console.log('====================================');
-  console.log("CTX: " + {...ctx});
-  console.log('====================================');
-
   return next({ ctx: { ...ctx, auth: session } });
 });
 
