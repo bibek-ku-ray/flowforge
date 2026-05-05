@@ -3,11 +3,10 @@ import {
   WorkflowList,
 } from "@/features/workflows/components/workflows";
 import { workflowsParamsLoader } from "@/features/workflows/server/params-loader";
-import { prefetchWorkflow } from "@/features/workflows/server/prefetch";
+import { prefetchWorkflows } from "@/features/workflows/server/prefetch";
 import { requireAuth } from "@/lib/auth-utils";
 import { HydrateClient } from "@/trpc/server";
 import type { SearchParams } from "nuqs/server";
-
 
 type Props = {
   searchParams: Promise<SearchParams>;
@@ -18,7 +17,7 @@ const Page = async ({ searchParams }: Props) => {
 
   const params = await workflowsParamsLoader(searchParams);
 
-  await prefetchWorkflow(params);
+  await prefetchWorkflows(params);
 
   return (
     <WorkflowContainer>

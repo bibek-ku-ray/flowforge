@@ -70,7 +70,7 @@ export function AppSidebar() {
                   width={20}
                   height={20}
                 />
-                <span className="font-semibold">Flowforge</span>
+                <span className="font-bold uppercase text-primary">Flowforge</span>
               </Link>
             </SidebarMenuButton>
           )}

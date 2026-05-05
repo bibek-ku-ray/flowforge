@@ -5,7 +5,7 @@ const layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main className="w-full">
+      <main className="w-full flex-1">
         {/* <SidebarTrigger/> */}
         {children}
       </main>
