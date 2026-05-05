@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { cache } from "react";
 import { makeQueryClient } from "@/trpc/query-client";
 import { polarClient } from "@/lib/polar";
+import superjson from 'superjson'
 
 /**
  * This context creator accepts `headers` so it can be reused in both
@@ -18,7 +19,9 @@ export const getQueryClient = cache(makeQueryClient);
 
 const t = initTRPC
   .context<Awaited<ReturnType<typeof createTRPCContext>>>()
-  .create();
+  .create({
+    transformer: superjson
+  });
 
 export const createTRPCRouter = t.router;
 export const createCallerFactory = t.createCallerFactory;
