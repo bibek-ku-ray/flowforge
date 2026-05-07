@@ -135,3 +135,27 @@
         cursor: pointer;
     }
 }
+
+/* ReactFlow dark mode overrides */
+.dark .react-flow__controls {
+  background: var(--background);
+  border-color: var(--border);
+}
+
+.dark .react-flow__controls-button {
+  background: var(--background) !important;
+  border-bottom-color: var(--border) !important;
+}
+
+.dark .react-flow__controls-button:hover {
+  background: var(--muted) !important;
+}
+
+.dark .react-flow__controls-button svg {
+  fill: var(--foreground);
+}
+
+.dark .react-flow__minimap {
+  background: var(--background) !important;
+  border-color: var(--border) !important;
+}
