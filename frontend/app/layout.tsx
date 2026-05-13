@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TRPCReactProvider } from "@/trpc/client";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { Provider } from "jotai";
 
 const robotoSlab = Roboto_Slab({
   subsets: ["latin"],
@@ -40,7 +41,10 @@ export default function RootLayout({
         <TRPCReactProvider>
           <TooltipProvider>
             {" "}
-            <NuqsAdapter>{children}</NuqsAdapter>{" "}
+            <NuqsAdapter>
+              {" "}
+              <Provider> {children} </Provider>{" "}
+            </NuqsAdapter>{" "}
           </TooltipProvider>
         </TRPCReactProvider>
         <Toaster />
