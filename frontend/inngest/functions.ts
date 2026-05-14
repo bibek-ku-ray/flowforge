@@ -1,17 +1,47 @@
-import { generateText } from "ai";
+import { NonRetriableError } from "inngest";
 import { inngest } from "./client";
-import { openai } from "@ai-sdk/openai";
+import { prisma } from "@/lib/prisma";
+import { topologicalSort } from "./utils";
+import { getExecutor } from "@/features/execution/libs/executor-registry";
 
-export const execute = inngest.createFunction(
-  { id: "execute-ai", triggers: { event: "execute/ai" } },
-
+export const executeWorkflow = inngest.createFunction(
+  { id: "execute-workflow" },
+  { event: "workflows/execute.workflow" },
   async ({ event, step }) => {
-    const { steps } = await step.ai.wrap("openai-generate-text", generateText, {
-      model: openai("gpt-5-nano"),
-      system: "You are a helpful assistant",
-      prompt: "What is 4-9?",
+    const workflowId = event.data.workflowId;
+
+    if (!workflowId) {
+      throw new NonRetriableError("Workflow ID is missing");
+    }
+
+    const sortedNodes = await step.run("prepare-workflow", async () => {
+      const workflow = await prisma.workflow.findUnique({
+        where: { id: workflowId },
+        include: {
+          nodes: true,
+          connections: true,
+        },
+      });
+      return topologicalSort(workflow?.nodes, workflow?.connections);
     });
 
-    return { message: "AI execution complete", steps };
+    let context = event.data.initialData || {}
+
+    for (const node of sortedNodes) {
+      const executor = getExecutor(node.type as NodeType);
+      context = await executor({
+        data: node.data as Record<string, unknown>,
+        nodeId: node.id,
+        userId,
+        context,
+        step,
+        // publish,
+      });
+    }
+
+
+
+    return { sortedNodes };
   },
+
 );
