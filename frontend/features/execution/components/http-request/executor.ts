@@ -1,12 +1,19 @@
 import { NodeExecutor } from "@/features/execution/types";
 import { NonRetriableError } from "inngest";
 import ky, { type Options as KyOptions } from "ky";
-import { HttpResponse } from "next/experimental/testmode/playwright/msw";
+import Handlebars from "handlebars"
+
+Handlebars.registerHelper("json", (context) => {
+  const jsonString = JSON.stringify(context, null, 3)
+  const safeString = new Handlebars.SafeString(jsonString)
+
+  return safeString
+})
 
 type HttpRequestData = {
-  variableName?: string;
-  endpoint?: string;
-  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  variableName: string;
+  endpoint: string;
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: string;
 };
 
@@ -20,18 +27,26 @@ export const HttpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
   if (!data.endpoint) {
     throw new NonRetriableError("Http request node: No endpoint configured");
   }
+
   if (!data.variableName) {
     throw new NonRetriableError("variable Name not configured");
   }
 
+  if(!data.method) {
+    throw new NonRetriableError("Method not configured")
+  }
+
   try {
     const result = await step.run("http-trigger", async () => {
-      const endpoint = data.endpoint!;
-      const method = data.method || "GET";
+
+      const endpoint = Handlebars.compile(data.endpoint)(context)
+      const method = data.method;
 
       const options: KyOptions = { method };
 
       if (["POST", "PUT", "PATCH"].includes(method)) {
+        const resolved = Handlebars.compile(data.body || "{}")(context)
+        JSON.parse(resolved)
         options.body = data.body;
         options.headers = {
           "Content-Type": "application/json",
