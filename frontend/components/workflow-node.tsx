@@ -7,7 +7,7 @@ interface WorkflowNodeProps {
   children: ReactNode;
   showToolBar?: boolean;
   onDelete?: () => void;
-  onSetting?: () => void;
+  onSettings?: () => void;
   name?: string;
   description?: string;
 }
@@ -16,20 +16,37 @@ export function WorkflowNode({
   children,
   showToolBar,
   onDelete,
-  onSetting,
+  onSettings,
   name,
   description,
 }: WorkflowNodeProps) {
+  const shouldShowToolbar =
+    showToolBar ?? Boolean(onDelete || onSettings);
+
   return (
     <>
-      {showToolBar && (
-        <NodeToolbar>
-          <Button size={`sm`} variant={`ghost`} onClick={onSetting}>
-            <SettingsIcon className="size-4" />
-          </Button>
-          <Button size={`sm`} variant={`ghost`} onClick={onDelete}>
-            <TrashIcon className="size-4" />
-          </Button>
+      {shouldShowToolbar && (
+        <NodeToolbar position={Position.Top} className="flex gap-0.5">
+          {onSettings && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onSettings}
+              aria-label="Node settings"
+            >
+              <SettingsIcon className="size-4" />
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onDelete}
+              aria-label="Delete node"
+            >
+              <TrashIcon className="size-4" />
+            </Button>
+          )}
         </NodeToolbar>
       )}
       {children}

@@ -16,6 +16,7 @@ import {
   useUpdateWorkflowName,
 } from "@/features/workflows/hooks/use-workflows";
 import { useAtomValue } from "jotai";
+import { ExecuteWorkflowButton } from "./execute-workflow-button";
 import { SaveIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -41,12 +42,11 @@ export const EditorSaveButton = ({ workflowId }: { workflowId: string }) => {
   };
 
   return (
-    <div className="ml-auto ">
+    <div className="ml-auto flex items-center gap-2">
+      <ExecuteWorkflowButton workflowId={workflowId} size="sm" />
       <Button
-        size={`sm`}
-        onClick={() => {
-          handleSave;
-        }}
+        size="sm"
+        onClick={handleSave}
         disabled={saveWorkflow.isPending}
       >
         <SaveIcon className="size-4" />

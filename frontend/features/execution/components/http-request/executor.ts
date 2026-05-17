@@ -25,41 +25,33 @@ export const HttpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
   step,
   publish,
 }) => {
-  await publish(
-    httpRequestChannel().status({
-      nodeId,
-      status: "loading",
-    }),
-  );
+  await publish(httpRequestChannel.status, {
+    nodeId,
+    status: "loading",
+  });
 
   if (!data.endpoint) {
-    await publish(
-      httpRequestChannel().status({
-        nodeId,
-        status: "error",
-      }),
-    );
+    await publish(httpRequestChannel.status, {
+      nodeId,
+      status: "error",
+    });
 
     throw new NonRetriableError("Http request node: No endpoint configured");
   }
 
   if (!data.variableName) {
-    await publish(
-      httpRequestChannel().status({
-        nodeId,
-        status: "error",
-      }),
-    );
+    await publish(httpRequestChannel.status, {
+      nodeId,
+      status: "error",
+    });
     throw new NonRetriableError("variable Name not configured");
   }
 
   if (!data.method) {
-    await publish(
-      httpRequestChannel().status({
-        nodeId,
-        status: "error",
-      }),
-    );
+    await publish(httpRequestChannel.status, {
+      nodeId,
+      status: "error",
+    });
     throw new NonRetriableError("Method not configured");
   }
 
@@ -99,12 +91,10 @@ export const HttpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
       };
     });
 
-    await publish(
-      httpRequestChannel().status({
-        nodeId,
-        status: "success",
-      }),
-    );
+    await publish(httpRequestChannel.status, {
+      nodeId,
+      status: "success",
+    });
 
     return result;
   } catch (error) {

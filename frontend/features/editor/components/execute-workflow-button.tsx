@@ -4,8 +4,10 @@ import { FlaskConicalIcon } from "lucide-react";
 
 export const ExecuteWorkflowButton = ({
   workflowId,
+  size = "lg",
 }: {
   workflowId: string;
+  size?: "sm" | "lg";
 }) => {
   const executeWorkflow = useExecuteWorkflow();
 
@@ -15,7 +17,7 @@ export const ExecuteWorkflowButton = ({
 
   return (
     <Button
-      size={`lg`}
+      size={size}
       onClick={handleExecute}
       disabled={executeWorkflow.isPending}
     >

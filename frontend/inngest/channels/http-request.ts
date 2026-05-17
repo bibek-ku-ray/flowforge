@@ -1,10 +1,11 @@
-import { channel, topic } from "@inngest/realtime";
+import { realtime } from "inngest";
+import { nodeStatusSchema } from "./node-status";
 
 export const HTTP_REQUEST_CHANNEL_NAME = "http-request-execution";
 
-export const httpRequestChannel = channel(HTTP_REQUEST_CHANNEL_NAME).addTopic(
-  topic("status").type<{
-    nodeId: string;
-    status: "loading" | "success" | "error";
-  }>(),
-);
+export const httpRequestChannel = realtime.channel({
+  name: HTTP_REQUEST_CHANNEL_NAME,
+  topics: {
+    status: { schema: nodeStatusSchema },
+  },
+});

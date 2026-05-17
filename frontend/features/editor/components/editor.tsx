@@ -64,12 +64,16 @@ export const Editor = ({ workflowId }: { workflowId: string }) => {
     custom: CustomNode,
   };
 
-  const hasManualTrigger = useMemo(() => {
-    return nodes.some((node) => node.type === NodeType.MANUAL_TRIGGER);
+  const canExecute = useMemo(() => {
+    return nodes.some(
+      (node) =>
+        node.type === NodeType.MANUAL_TRIGGER ||
+        node.type === NodeType.INITIAL,
+    );
   }, [nodes]);
 
   return (
-    <div className="w-full h-screen">
+    <div className="size-full min-h-0">
       <ReactFlow
         colorMode="dark"
         nodes={nodes}
@@ -102,8 +106,8 @@ export const Editor = ({ workflowId }: { workflowId: string }) => {
         <Panel position="top-right">
           <AddNodeButton />
         </Panel>
-        {hasManualTrigger && (
-          <Panel position="bottom-center">
+        {canExecute && (
+          <Panel position="bottom-center" className="mb-4">
             <ExecuteWorkflowButton workflowId={workflowId} />
           </Panel>
         )}
