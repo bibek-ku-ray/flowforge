@@ -1,32 +1,27 @@
+"use client";
+
 import { BaseExecutionNode } from "@/components/base-execution-node";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { GlobeIcon } from "lucide-react";
-import { memo, useState } from "react";
+import { useState } from "react";
+import { getNodeExecutionStatus } from "@/features/execution/context/workflow-execution-context";
 import { HttpRequestDialog, HttpRequestFormValues } from "./dialog";
-import { useNodeStatus } from "../../hooks/use-node-status";
-import { httpRequestChannel } from "@/inngest/channels/http-request";
-import { fetchHttpRequestRealtimeToken } from "./action";
 
 type HttpRequestNodeData = {
   variableName?: string;
   endpoint?: string;
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: string;
+  executionStatus?: "loading" | "success" | "error" | "initial";
   [key: string]: unknown;
 };
 
 type HttpRequestNodeType = Node<HttpRequestNodeData>;
 
-export const HttpRequestNode = memo((props: NodeProps<HttpRequestNodeType>) => {
+export function HttpRequestNode(props: NodeProps<HttpRequestNodeType>) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { setNodes } = useReactFlow();
-
-  const nodeStatus = useNodeStatus({
-    nodeId: props.id,
-    channel: httpRequestChannel,
-    topic: "status",
-    refreshToken: fetchHttpRequestRealtimeToken,
-  });
+  const nodeStatus = getNodeExecutionStatus(props.data);
 
   const handleOpenSettings = () => setDialogOpen(true);
 
@@ -72,6 +67,6 @@ export const HttpRequestNode = memo((props: NodeProps<HttpRequestNodeType>) => {
       />
     </>
   );
-});
+}
 
 HttpRequestNode.displayName = "HttpRequestNode";

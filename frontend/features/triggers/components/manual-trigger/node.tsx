@@ -1,23 +1,15 @@
 import { NodeProps } from "@xyflow/react";
-import { memo, useState } from "react";
+import { useState } from "react";
+import { getNodeExecutionStatus } from "@/features/execution/context/workflow-execution-context";
 import { BaseTriggerNode } from "../base-trigger-node";
 import { MousePointerIcon } from "lucide-react";
 import { ManualTriggerDialog } from "./dialog";
-import { fetchManualTriggerRealtimeToken } from "./action";
-import { manualTriggerChannel } from "@/inngest/channels/manual-trigger";
-import { useNodeStatus } from "@/features/execution/hooks/use-node-status";
 
-export const ManualTriggerNode = memo((props: NodeProps) => {
+export function ManualTriggerNode(props: NodeProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const nodeStatus = getNodeExecutionStatus(props.data);
 
-  const nodeStatus = useNodeStatus({
-    nodeId: props.id,
-    channel: manualTriggerChannel,
-    topic: "status",
-    refreshToken: fetchManualTriggerRealtimeToken,
-  });
-
-  const handleOpenSettings = () => setDialogOpen(true)
+  const handleOpenSettings = () => setDialogOpen(true);
 
   return (
     <>
@@ -32,6 +24,6 @@ export const ManualTriggerNode = memo((props: NodeProps) => {
       />
     </>
   );
-});
+}
 
 ManualTriggerNode.displayName = "ManualTriggerNode";

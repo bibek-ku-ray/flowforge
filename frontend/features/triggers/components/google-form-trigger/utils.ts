@@ -26,7 +26,10 @@ export const generateGoogleFormScript = (
     'method': 'post',
     'contentType': 'application/json',
     'payload': JSON.stringify(payload),
-    'muteHttpExceptions': true
+    'muteHttpExceptions': true,
+    'headers': {
+      'ngrok-skip-browser-warning': 'true'
+    }
   };
 
   var WEBHOOK_URL = '${webhookUrl}';
@@ -35,9 +38,6 @@ export const generateGoogleFormScript = (
     var response = UrlFetchApp.fetch(WEBHOOK_URL, options);
     var statusCode = response.getResponseCode();
     var responseBody = response.getContentText();
-
-    console.log('Webhook status:', statusCode);
-    console.log('Webhook response:', responseBody);
 
     if (statusCode < 200 || statusCode >= 300) {
       throw new Error('Webhook returned ' + statusCode + ': ' + responseBody);

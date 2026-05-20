@@ -13,10 +13,13 @@ const nextConfig: NextConfig = {
         destination: "/workflows",
         permanent: false,
       },
+    ];
+  },
+  async rewrites() {
+    return [
       {
         source: "/api/workflows/google-form",
         destination: "/api/webhooks/google-form",
-        permanent: false,
       },
     ];
   },

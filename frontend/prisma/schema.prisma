@@ -79,9 +79,18 @@ model Workflow {
   
   nodes       Node[]
   connections Connection[]
+  executionSnapshot WorkflowExecutionSnapshot?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model WorkflowExecutionSnapshot {
+  workflowId   String   @id
+  workflow     Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  phase        String   @default("idle")
+  nodeStatuses Json     @default("{}")
+  updatedAt    DateTime @updatedAt
 }
 
 enum NodeType {

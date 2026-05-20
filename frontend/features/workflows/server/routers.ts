@@ -9,6 +9,7 @@ import { generateSlug } from "random-word-slugs";
 import z from "zod";
 import type { Node, Edge } from "@xyflow/react";
 import { NodeType } from "@/generated/prisma/enums";
+import { claimGoogleFormId } from "@/lib/resolve-google-form-workflow";
 import { sendWorkflowExecution } from "@/inngest/utils";
 
 export const workflowsRouter = createTRPCRouter({
@@ -102,6 +103,10 @@ export const workflowsRouter = createTRPCRouter({
       });
 
       return await prisma.$transaction(async (tx) => {
+        await tx.connection.deleteMany({
+          where: { workflowId: id },
+        });
+
         await tx.node.deleteMany({
           where: { workflowId: id },
         });
@@ -117,16 +122,29 @@ export const workflowsRouter = createTRPCRouter({
           })),
         });
 
-        // create connection
-        await tx.connection.createMany({
-          data: edges.map((edge) => ({
-            workflowId: id,
-            fromNodeId: edge.source,
-            toNodeId: edge.target,
-            fromOutput: edge.sourceHandle || "main",
-            toInput: edge.targetHandle || "main",
-          })),
-        });
+        const uniqueEdges = new Map<
+          string,
+          (typeof edges)[number]
+        >();
+
+        for (const edge of edges) {
+          const fromOutput = edge.sourceHandle || "main";
+          const toInput = edge.targetHandle || "main";
+          const key = `${edge.source}|${edge.target}|${fromOutput}|${toInput}`;
+          uniqueEdges.set(key, edge);
+        }
+
+        if (uniqueEdges.size > 0) {
+          await tx.connection.createMany({
+            data: [...uniqueEdges.values()].map((edge) => ({
+              workflowId: id,
+              fromNodeId: edge.source,
+              toNodeId: edge.target,
+              fromOutput: edge.sourceHandle || "main",
+              toInput: edge.targetHandle || "main",
+            })),
+          });
+        }
 
         // update workflow update timestamp
         await tx.workflow.update({
@@ -135,6 +153,34 @@ export const workflowsRouter = createTRPCRouter({
         });
         return workflow;
       });
+    }),
+
+  updateGoogleFormTrigger: protectedProcedure
+    .input(
+      z.object({
+        workflowId: z.string(),
+        nodeId: z.string(),
+        formId: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const node = await prisma.node.findFirstOrThrow({
+        where: {
+          id: input.nodeId,
+          workflowId: input.workflowId,
+          type: NodeType.GOOGLE_FORM_TRIGGER,
+          workflow: { userId: ctx.auth.user.id },
+        },
+      });
+
+      const data = (node.data as Record<string, unknown>) || {};
+
+      return claimGoogleFormId(
+        ctx.auth.user.id,
+        node.id,
+        input.formId,
+        data,
+      );
     }),
 
   getOne: protectedProcedure
@@ -170,7 +216,7 @@ export const workflowsRouter = createTRPCRouter({
         id: connection.id,
         source: connection.fromNodeId,
         target: connection.toNodeId,
-        sourceHandle: connection.fromNodeId,
+        sourceHandle: connection.fromOutput,
         targetHandle: connection.toInput,
       }));
 

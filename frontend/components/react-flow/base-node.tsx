@@ -29,13 +29,13 @@ export function BaseNode({ className, status, ...props }: BaseNodeProps) {
     >
       {props.children}
       {status === "error" && (
-        <XCircleIcon className="absolute right-0.5 bottom-0.5 size-2 text-red-600 stroke-3" />
+        <XCircleIcon className="absolute right-1.5 bottom-1.5 size-2 text-red-500 stroke-[2.5]" />
       )}
       {status === "success" && (
-        <CheckCircle2Icon className="absolute right-0.5 bottom-0.5 size-2 text-green-600 stroke-3" />
+        <CheckCircle2Icon className="absolute right-1.5 bottom-1.5 size-2 text-emerald-500 stroke-[2.5]" />
       )}
       {status === "loading" && (
-        <Loader2Icon className="absolute -right-0.5 -bottom-0.5 size-2 text-blue-600 stroke-3 animate-spin" />
+        <Loader2Icon className="absolute right-1.5 bottom-1.5 size-2 animate-spin text-blue-500 stroke-[2.5]" />
       )}
     </div>
   );

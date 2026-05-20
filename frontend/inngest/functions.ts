@@ -4,6 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { topologicalSort } from "./utils";
 import { getExecutor } from "@/features/execution/libs/executor-registry";
 import { NodeType } from "@/generated/prisma/client";
+import {
+  publishExecutionCompleted,
+  publishExecutionStarted,
+} from "@/features/execution/lib/publish-execution-event";
 
 export const executeWorkflow = inngest.createFunction(
   {
@@ -39,20 +43,31 @@ export const executeWorkflow = inngest.createFunction(
       };
     });
 
+    await publishExecutionStarted(publish, workflowId);
+
     let context = (event.data.initialData as Record<string, unknown>) || {};
 
-    for (const node of sortedNodes) {
-      const executor = getExecutor(node.type as NodeType);
-      context = await executor({
-        data: node.data as Record<string, unknown>,
-        nodeId: node.id,
-        userId,
-        context,
-        step,
-        publish,
-      });
-    }
+    try {
+      for (const node of sortedNodes) {
+        const executor = getExecutor(node.type as NodeType);
+        context = await executor({
+          data: node.data as Record<string, unknown>,
+          nodeId: node.id,
+          nodeType: node.type,
+          workflowId,
+          userId,
+          context,
+          step,
+          publish,
+        });
+      }
 
-    return { sortedNodes };
+      await publishExecutionCompleted(publish, workflowId, true);
+
+      return { sortedNodes };
+    } catch (error) {
+      await publishExecutionCompleted(publish, workflowId, false);
+      throw error;
+    }
   },
 );

@@ -21,10 +21,17 @@ import { SaveIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { editorAtom } from "../store/atoms";
+import { NodeType } from "@/generated/prisma/enums";
 
 export const EditorSaveButton = ({ workflowId }: { workflowId: string }) => {
   const editor = useAtomValue(editorAtom);
   const saveWorkflow = useUpdateWorkflow();
+  const { data: workflow } = useSuspenseWorkflow(workflowId);
+
+  const hasManualTrigger = workflow.nodes.some(
+    (node) =>
+      node.type === NodeType.MANUAL_TRIGGER || node.type === NodeType.INITIAL,
+  );
 
   const handleSave = () => {
     if (!editor) {
@@ -43,7 +50,9 @@ export const EditorSaveButton = ({ workflowId }: { workflowId: string }) => {
 
   return (
     <div className="ml-auto flex items-center gap-2">
-      <ExecuteWorkflowButton workflowId={workflowId} size="sm" />
+      {hasManualTrigger && (
+        <ExecuteWorkflowButton workflowId={workflowId} size="sm" />
+      )}
       <Button
         size="sm"
         onClick={handleSave}

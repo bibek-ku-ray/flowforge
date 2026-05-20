@@ -2,7 +2,7 @@ import { NodeExecutor } from "@/features/execution/types";
 import { NonRetriableError } from "inngest";
 import ky, { type Options as KyOptions } from "ky";
 import Handlebars from "handlebars";
-import { httpRequestChannel } from "@/inngest/channels/http-request";
+import { publishNodeStatus } from "@/features/execution/lib/publish-execution-event";
 
 Handlebars.registerHelper("json", (context) => {
   const jsonString = JSON.stringify(context, null, 3);
@@ -21,37 +21,26 @@ type HttpRequestData = {
 export const HttpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
   data,
   nodeId,
+  nodeType,
+  workflowId,
   context,
   step,
   publish,
 }) => {
-  await publish(httpRequestChannel.status, {
-    nodeId,
-    status: "loading",
-  });
+  await publishNodeStatus(publish, workflowId, nodeId, nodeType, "loading");
 
   if (!data.endpoint) {
-    await publish(httpRequestChannel.status, {
-      nodeId,
-      status: "error",
-    });
-
+    await publishNodeStatus(publish, workflowId, nodeId, nodeType, "error");
     throw new NonRetriableError("Http request node: No endpoint configured");
   }
 
   if (!data.variableName) {
-    await publish(httpRequestChannel.status, {
-      nodeId,
-      status: "error",
-    });
+    await publishNodeStatus(publish, workflowId, nodeId, nodeType, "error");
     throw new NonRetriableError("variable Name not configured");
   }
 
   if (!data.method) {
-    await publish(httpRequestChannel.status, {
-      nodeId,
-      status: "error",
-    });
+    await publishNodeStatus(publish, workflowId, nodeId, nodeType, "error");
     throw new NonRetriableError("Method not configured");
   }
 
@@ -91,13 +80,11 @@ export const HttpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
       };
     });
 
-    await publish(httpRequestChannel.status, {
-      nodeId,
-      status: "success",
-    });
+    await publishNodeStatus(publish, workflowId, nodeId, nodeType, "success");
 
     return result;
   } catch (error) {
+    await publishNodeStatus(publish, workflowId, nodeId, nodeType, "error");
     throw error;
   }
 };

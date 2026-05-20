@@ -21,13 +21,12 @@ export const SpinnerLoadingIndicator = ({
 }) => {
   return (
     <div className="relative">
-      <StatusBorder className="border-blue-700/40">{children}</StatusBorder>
+      <StatusBorder className="border-blue-500/80">{children}</StatusBorder>
 
-      <div className="bg-background/50 absolute inset-0 z-50 rounded-[9px] backdrop-blur-xs" />
-      <div className="absolute inset-0 z-50">
-        <span className="absolute top-[calc(50%-1.25rem)] left-[calc(50%-1.25rem)] inline-block h-10 w-10 animate-ping rounded-full bg-blue-700/20" />
-
-        <LoaderCircle className="absolute top-[calc(50%-0.75rem)] left-[calc(50%-0.75rem)] size-6 animate-spin text-blue-700" />
+      <div className="absolute inset-0 z-50 rounded-[9px] bg-background/50 backdrop-blur-xs" />
+      <div className="pointer-events-none absolute inset-0 z-50">
+        <span className="absolute top-[calc(50%-1.25rem)] left-[calc(50%-1.25rem)] inline-block h-10 w-10 animate-ping rounded-full bg-blue-500/20" />
+        <LoaderCircle className="absolute top-[calc(50%-0.75rem)] left-[calc(50%-0.75rem)] size-6 animate-spin text-blue-500" />
       </div>
     </div>
   );
@@ -41,16 +40,16 @@ export const BorderLoadingIndicator = ({
   className?: string;
 }) => {
   return (
-    <>
-      <div className="absolute -top-0.5 -left-0.5 h-[calc(100%+2px)] w-[calc(100%+4px)]">
+    <div className="relative">
+      <div className="pointer-events-none absolute -inset-[3px]">
         <style>
           {`
-        @keyframes spin {
+        @keyframes node-status-spin {
           from { transform: translate(-50%, -50%) rotate(0deg); }
           to { transform: translate(-50%, -50%) rotate(360deg); }
         }
-        .spinner {
-          animation: spin 2s linear infinite;
+        .node-status-spinner {
+          animation: node-status-spin 2s linear infinite;
           position: absolute;
           left: 50%;
           top: 50%;
@@ -66,11 +65,11 @@ export const BorderLoadingIndicator = ({
             className,
           )}
         >
-          <div className="spinner rounded-full bg-[conic-gradient(from_0deg_at_50%_50%,rgba(42,67,233,0.5)_0deg,rgba(42,138,246)_360deg)]" />
+          <div className="node-status-spinner rounded-full bg-[conic-gradient(from_0deg_at_50%_50%,rgba(59,130,246,0.15)_0deg,rgba(59,130,246,0.9)_360deg)]" />
         </div>
       </div>
       {children}
-    </>
+    </div>
   );
 };
 
@@ -82,15 +81,15 @@ const StatusBorder = ({
   className?: string;
 }) => {
   return (
-    <>
+    <div className="relative">
       <div
         className={cn(
-          "absolute -top-[2px] -left-[2px] h-[calc(100%+4px)] w-[calc(100%+4px)] rounded-md border-3",
+          "pointer-events-none absolute -inset-[3px] rounded-md border-[3px]",
           className,
         )}
       />
       {children}
-    </>
+    </div>
   );
 };
 
@@ -116,13 +115,13 @@ export const NodeStatusIndicator = ({
       }
     case "success":
       return (
-        <StatusBorder className={cn("border-emerald-600/80", className)}>
+        <StatusBorder className={cn("border-emerald-500", className)}>
           {children}
         </StatusBorder>
       );
     case "error":
       return (
-        <StatusBorder className={cn("border-red-600/80", className)}>
+        <StatusBorder className={cn("border-red-500", className)}>
           {children}
         </StatusBorder>
       );
