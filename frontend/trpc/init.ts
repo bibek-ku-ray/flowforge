@@ -11,7 +11,8 @@ import superjson from 'superjson'
  * the RSC server caller (where you pass `next/headers`) and the
  * API route handler (where you pass the request headers).
  */
-export const createTRPCContext = async (_opts: { headers: Headers }) => {
+export const createTRPCContext = async (opts?: { headers: Headers }) => {
+  void opts?.headers;
   return {};
 };
 

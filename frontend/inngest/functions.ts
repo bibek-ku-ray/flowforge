@@ -2,7 +2,8 @@ import { NonRetriableError } from "inngest";
 import { inngest } from "./client";
 import { prisma } from "@/lib/prisma";
 import { topologicalSort } from "./utils";
-import { NodeType } from "@/generated/prisma/client";
+import type { Prisma } from "@/generated/prisma/client";
+import { ExecutionStatus, NodeType } from "@/generated/prisma/enums";
 import { getExecutor } from "@/features/execution/libs/executor-registry";
 import { httpRequestChannel } from "./channels/http-request";
 import { manualTriggerChannel } from "./channels/manual-trigger";
@@ -15,6 +16,13 @@ import {
   publishExecutionCompleted,
   publishExecutionStarted,
 } from "@/features/execution/lib/publish-execution-event";
+import { discordChannel } from "./channels/discord";
+import { slackChannel } from "./channels/slack";
+import {
+  executeWorkflowEvent,
+  type ExecuteWorkflowEventData,
+} from "./events";
+
 
 const workflowRealtimeChannels = [
   httpRequestChannel,
@@ -24,23 +32,47 @@ const workflowRealtimeChannels = [
   geminiChannel,
   openAiChannel,
   anthropicChannel,
+  discordChannel,
+  slackChannel
 ] as const;
 
 export const executeWorkflow = inngest.createFunction(
   {
     id: "execute-workflow",
     retries: 0,
-    triggers: [{ event: "workflows/execute.workflow" }],
+    onFailure: async ({ event }) => {
+      return prisma.execution.update({
+        where: { inngestEventId: event.data.event.id },
+        data: {
+          status: ExecutionStatus.FAILED,
+          error: event.data.error.message,
+          errorStack: event.data.error.stack,
+        },
+      });
+    },
+    triggers: [{ event: executeWorkflowEvent }],
   },
   async ({ event, step }) => {
     const publish = inngest.realtime.publish.bind(inngest.realtime);
     void workflowRealtimeChannels;
 
-    const workflowId = event.data.workflowId;
+    const { workflowId, initialData } =
+      event.data as ExecuteWorkflowEventData;
+      const inngestEventId = event.id;
 
-    if (!workflowId) {
-      throw new NonRetriableError("Workflow ID is missing");
-    }
+      if (!inngestEventId || !workflowId) {
+        throw new NonRetriableError("Event ID or workflow ID is missing");
+      }
+
+      await step.run("create-execution", async () => {
+        return prisma.execution.create({
+            data: {
+              workflowId,
+              inngestEventId,
+            },
+          });
+        });
+    
 
     const { sortedNodes, userId } = await step.run("prepare-workflow", async () => {
       const workflow = await prisma.workflow.findUniqueOrThrow({
@@ -59,7 +91,7 @@ export const executeWorkflow = inngest.createFunction(
 
     await publishExecutionStarted(publish, workflowId);
 
-    let context = (event.data.initialData as Record<string, unknown>) || {};
+    let context = initialData ?? {};
 
     try {
       for (const node of sortedNodes) {
@@ -77,6 +109,18 @@ export const executeWorkflow = inngest.createFunction(
       }
 
       await publishExecutionCompleted(publish, workflowId, true);
+
+      await step.run("update-execution", async () => {
+        return prisma.execution.update({
+          where: { inngestEventId, workflowId },
+          data: {
+            status: ExecutionStatus.SUCCESS,
+            completedAt: new Date(),
+            output: context as Prisma.InputJsonValue,
+          },
+        })
+      });
+  
 
       return {
         workflowId,

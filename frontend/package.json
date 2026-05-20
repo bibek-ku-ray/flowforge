@@ -12,6 +12,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "dev:inngest": "pnpm dlx inngest-cli@latest dev",
     "dev:all": "mprocs",
     "dev:ngrok": "ngrok http --url=handsaw-koala-unhitched.ngrok-free.dev 3000"
@@ -45,6 +46,7 @@
     "dotenv": "^17.3.1",
     "embla-carousel-react": "^8.6.0",
     "handlebars": "^4.7.9",
+    "html-entities": "^2.6.0",
     "inngest": "^4.2.4",
     "input-otp": "^1.4.2",
     "jotai": "^2.20.0",

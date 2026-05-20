@@ -54,7 +54,7 @@ export const WorkflowContainer = ({
 
 export const WorkflowList = () => {
   const { data } = useSuspenseWorkflows();
-  const [params, setParams] = useWorkflowParams();
+  const [, setParams] = useWorkflowParams();
   const removeWorkflow = useRemoveWorkflow();
 
   return (

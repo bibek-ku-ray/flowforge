@@ -8,7 +8,6 @@ import {
   checkout,
   portal,
   usage,
-  webhooks,
 } from "@polar-sh/better-auth";
 import {
   getAllowedHosts,

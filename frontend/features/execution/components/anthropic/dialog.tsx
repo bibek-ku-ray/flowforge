@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useCredentialsByType } from "@/features/credentials/hooks/use-credentials";
@@ -92,7 +92,8 @@ export const AnthropicDialog = ({
     }
   }, [open, defaultValues, form]);
 
-  const watchVariableName = form.watch("variableName") || "myAnthropic";
+  const watchVariableName =
+    useWatch({ control: form.control, name: "variableName" }) || "myAnthropic";
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     onSubmit(values);

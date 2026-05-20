@@ -25,7 +25,15 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { isLabelContentAFunction } from "recharts/types/component/Label";
+import { useSyncExternalStore } from "react";
+
+function useIsClient() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+}
 
 const menuItems = [
   {
@@ -54,14 +62,18 @@ export function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { state } = useSidebar();
+  const isClient = useIsClient();
 
   const { hasActiveSubscription, isLoading } = useHasActiveSubscription();
+
+  const showUpgrade = isClient && !hasActiveSubscription && !isLoading;
+  const sidebarExpanded = !isClient || state === "expanded";
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center justify-between gap-x-2 w-full">
-          {state === "expanded" && (
+          {sidebarExpanded && (
             <SidebarMenuButton asChild className="gap-x-4 h-10 px-4 flex-1">
               <Link href="/workflows" prefetch>
                 <Image
@@ -74,7 +86,7 @@ export function AppSidebar() {
               </Link>
             </SidebarMenuButton>
           )}
-          <SidebarTrigger className={state === "expanded" ? "" : "w-full"} />
+          <SidebarTrigger className={sidebarExpanded ? "" : "w-full"} />
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -108,7 +120,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          {!hasActiveSubscription && !isLoading && (
+          {showUpgrade && (
             <SidebarMenuItem>
               <SidebarMenuButton
                 tooltip={`Upgrade`}

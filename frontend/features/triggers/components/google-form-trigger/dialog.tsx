@@ -71,7 +71,7 @@ export const GoogleFromTriggerDialog = ({
     try {
       await navigator.clipboard.writeText(webhookUrl);
       toast.success("Webhook URL copied to clipboard");
-    } catch (error) {
+    } catch {
       toast.error("Failed to copy URL");
     }
   };
