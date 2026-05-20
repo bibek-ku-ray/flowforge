@@ -9,8 +9,8 @@ export const nodeComponents = {
   [NodeType.INITIAL]: InitialNode,
   [NodeType.HTTP_REQUEST]: HttpRequestNode,
   [NodeType.MANUAL_TRIGGER]: ManualTriggerNode,
-  [NodeType.GOOGLE_FORM_TRIGGER]: GoogleFormTrigger
-
+  [NodeType.GOOGLE_FORM_TRIGGER]: GoogleFormTrigger,
+  [NodeType.STRIPE_TRIGGER]: StripeTriggerNode,
 
 } as const satisfies NodeTypes
 

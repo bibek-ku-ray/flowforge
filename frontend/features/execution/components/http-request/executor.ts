@@ -1,51 +1,69 @@
-import { NodeExecutor } from "@/features/execution/types";
+import Handlebars from "handlebars";
 import { NonRetriableError } from "inngest";
 import ky, { type Options as KyOptions } from "ky";
-import Handlebars from "handlebars";
-import { publishNodeStatus } from "@/features/execution/lib/publish-execution-event";
+import type { NodeExecutor } from "@/features/executions/types";
+import { httpRequestChannel } from "@/inngest/channels/http-request";
 
 Handlebars.registerHelper("json", (context) => {
-  const jsonString = JSON.stringify(context, null, 3);
+  const jsonString = JSON.stringify(context, null, 2);
   const safeString = new Handlebars.SafeString(jsonString);
 
   return safeString;
 });
 
 type HttpRequestData = {
-  variableName: string;
-  endpoint: string;
-  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  variableName?: string;
+  endpoint?: string;
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: string;
 };
 
-export const HttpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
+export const httpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
   data,
   nodeId,
-  nodeType,
-  workflowId,
   context,
   step,
   publish,
 }) => {
-  await publishNodeStatus(publish, workflowId, nodeId, nodeType, "loading");
-
-  if (!data.endpoint) {
-    await publishNodeStatus(publish, workflowId, nodeId, nodeType, "error");
-    throw new NonRetriableError("Http request node: No endpoint configured");
-  }
-
-  if (!data.variableName) {
-    await publishNodeStatus(publish, workflowId, nodeId, nodeType, "error");
-    throw new NonRetriableError("variable Name not configured");
-  }
-
-  if (!data.method) {
-    await publishNodeStatus(publish, workflowId, nodeId, nodeType, "error");
-    throw new NonRetriableError("Method not configured");
-  }
+  await publish(
+    httpRequestChannel().status({
+      nodeId,
+      status: "loading",
+    }),
+  );
 
   try {
-    const result = await step.run("http-trigger", async () => {
+    const result = await step.run("http-request", async () => {
+      if (!data.endpoint) {
+        await publish(
+          httpRequestChannel().status({
+            nodeId,
+            status: "error",
+          }),
+        );
+        throw new NonRetriableError("HTTP Request node: No endpoint configured");
+      }
+
+      if (!data.variableName) {
+        await publish(
+          httpRequestChannel().status({
+            nodeId,
+            status: "error",
+          }),
+        );
+        throw new NonRetriableError("HTTP Request node: Variable name not configured");
+      }
+
+      if (!data.method) {
+        await publish(
+          httpRequestChannel().status({
+            nodeId,
+            status: "error",
+          }),
+        );
+        throw new NonRetriableError("HTTP Request node: Method not configured");
+      }
+
       const endpoint = Handlebars.compile(data.endpoint)(context);
       const method = data.method;
 
@@ -54,7 +72,7 @@ export const HttpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
       if (["POST", "PUT", "PATCH"].includes(method)) {
         const resolved = Handlebars.compile(data.body || "{}")(context);
         JSON.parse(resolved);
-        options.body = data.body;
+        options.body = resolved;
         options.headers = {
           "Content-Type": "application/json",
         };
@@ -67,7 +85,7 @@ export const HttpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
         : await response.text();
 
       const responsePayload = {
-        HttpResponse: {
+        httpResponse: {
           status: response.status,
           statusText: response.statusText,
           data: responseData,
@@ -77,14 +95,24 @@ export const HttpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
       return {
         ...context,
         [data.variableName]: responsePayload,
-      };
+      }
     });
 
-    await publishNodeStatus(publish, workflowId, nodeId, nodeType, "success");
+    await publish(
+      httpRequestChannel().status({
+        nodeId,
+        status: "success",
+      }),
+    );
 
     return result;
   } catch (error) {
-    await publishNodeStatus(publish, workflowId, nodeId, nodeType, "error");
+    await publish(
+      httpRequestChannel().status({
+        nodeId,
+        status: "error",
+      }),
+    );
     throw error;
   }
 };
