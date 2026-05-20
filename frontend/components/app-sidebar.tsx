@@ -120,52 +120,56 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          {showUpgrade && (
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                tooltip={`Upgrade`}
-                className="gap-x-4 h-10 px-4"
-                onClick={() => {
-                  authClient.checkout({ slug: "pro" });
-                }}
-              >
-                <StarIcon className="h-4 w-4" />
-                Upgrade to Pro
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+          {isClient && (
+            <>
+              {showUpgrade && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    tooltip={`Upgrade`}
+                    className="gap-x-4 h-10 px-4"
+                    onClick={() => {
+                      authClient.checkout({ slug: "pro" });
+                    }}
+                  >
+                    <StarIcon className="h-4 w-4" />
+                    Upgrade to Pro
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip={`Billing`}
+                  className="gap-x-4 h-10 px-4"
+                  onClick={() => {
+                    authClient.customer.portal();
+                  }}
+                >
+                  <CreditCardIcon className="h-4 w-4" />
+                  Billing
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip={`Sign out`}
+                  className="gap-x-4 h-10 px-4"
+                  onClick={() => {
+                    authClient.signOut({
+                      fetchOptions: {
+                        onSuccess: () => {
+                          router.push("/login");
+                        },
+                      },
+                    });
+                  }}
+                >
+                  <LogOutIcon className="h-4 w-4" />
+                  Sign out
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </>
           )}
-
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip={`Billing`}
-              className="gap-x-4 h-10 px-4"
-              onClick={() => {
-                authClient.customer.portal();
-              }}
-            >
-              <CreditCardIcon className="h-4 w-4" />
-              Billing
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip={`Sign out`}
-              className="gap-x-4 h-10 px-4"
-              onClick={() => {
-                authClient.signOut({
-                  fetchOptions: {
-                    onSuccess: () => {
-                      router.push("/login");
-                    },
-                  },
-                });
-              }}
-            >
-              <LogOutIcon className="h-4 w-4" />
-              Sign out
-            </SidebarMenuButton>
-          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
