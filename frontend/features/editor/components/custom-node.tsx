@@ -1,7 +1,13 @@
 import React from "react";
-import { Handle, Position } from "@xyflow/react";
+import { Handle, Node, NodeProps, Position } from "@xyflow/react";
 
-export const CustomNode = ({ data }: any) => {
+type CustomNodeData = {
+  label: string;
+};
+
+type CustomNodeType = Node<CustomNodeData>;
+
+export const CustomNode = ({ data }: NodeProps<CustomNodeType>) => {
   return (
     <div className="px-4 py-2 rounded-lg border bg-background text-foreground border-border shadow-sm">
       <Handle

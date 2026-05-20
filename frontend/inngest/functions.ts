@@ -2,12 +2,29 @@ import { NonRetriableError } from "inngest";
 import { inngest } from "./client";
 import { prisma } from "@/lib/prisma";
 import { topologicalSort } from "./utils";
-import { getExecutor } from "@/features/execution/libs/executor-registry";
 import { NodeType } from "@/generated/prisma/client";
+import { getExecutor } from "@/features/execution/libs/executor-registry";
+import { httpRequestChannel } from "./channels/http-request";
+import { manualTriggerChannel } from "./channels/manual-trigger";
+import { googleFormTriggerChannel } from "./channels/google-form-trigger";
+import { stripeTriggerChannel } from "./channels/stripe-trigger";
+import { geminiChannel } from "./channels/gemini";
+import { openAiChannel } from "./channels/openai";
+import { anthropicChannel } from "./channels/anthropic";
 import {
   publishExecutionCompleted,
   publishExecutionStarted,
 } from "@/features/execution/lib/publish-execution-event";
+
+const workflowRealtimeChannels = [
+  httpRequestChannel,
+  manualTriggerChannel,
+  googleFormTriggerChannel,
+  stripeTriggerChannel,
+  geminiChannel,
+  openAiChannel,
+  anthropicChannel,
+] as const;
 
 export const executeWorkflow = inngest.createFunction(
   {
@@ -17,6 +34,7 @@ export const executeWorkflow = inngest.createFunction(
   },
   async ({ event, step }) => {
     const publish = inngest.realtime.publish.bind(inngest.realtime);
+    void workflowRealtimeChannels;
 
     const workflowId = event.data.workflowId;
 
@@ -25,17 +43,13 @@ export const executeWorkflow = inngest.createFunction(
     }
 
     const { sortedNodes, userId } = await step.run("prepare-workflow", async () => {
-      const workflow = await prisma.workflow.findUnique({
+      const workflow = await prisma.workflow.findUniqueOrThrow({
         where: { id: workflowId },
         include: {
           nodes: true,
           connections: true,
         },
       });
-
-      if (!workflow) {
-        throw new NonRetriableError("Workflow not found");
-      }
 
       return {
         sortedNodes: topologicalSort(workflow.nodes, workflow.connections),
@@ -64,7 +78,10 @@ export const executeWorkflow = inngest.createFunction(
 
       await publishExecutionCompleted(publish, workflowId, true);
 
-      return { sortedNodes };
+      return {
+        workflowId,
+        result: context,
+      };
     } catch (error) {
       await publishExecutionCompleted(publish, workflowId, false);
       throw error;

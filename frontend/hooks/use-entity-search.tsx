@@ -13,6 +13,12 @@ export function useEntitySearch<T extends { search: string; page: number }>({
   debounceMs = 500,
 }: UserEntitySearchProps<T>) {
   const [localSearch, setLocalSearch] = useState(params.search);
+  const [lastSyncedSearch, setLastSyncedSearch] = useState(params.search);
+
+  if (params.search !== lastSyncedSearch) {
+    setLastSyncedSearch(params.search);
+    setLocalSearch(params.search);
+  }
 
   useEffect(() => {
     if (localSearch === "" && params.search !== "") {
@@ -25,23 +31,19 @@ export function useEntitySearch<T extends { search: string; page: number }>({
     }
 
     const timer = setTimeout(() => {
-      if(localSearch !== params.search) {
+      if (localSearch !== params.search) {
         setParams({
           ...params,
           search: localSearch,
-          page: PAGINATION.DEFAULT_PAGE
-        })
+          page: PAGINATION.DEFAULT_PAGE,
+        });
       }
-    }, debounceMs)
-    return () => clearTimeout(timer)
+    }, debounceMs);
+    return () => clearTimeout(timer);
   }, [localSearch, params, setParams, debounceMs]);
-
-  useEffect(() => {
-    setLocalSearch(params.search)
-  }, [params.search])
 
   return {
     searchValue: localSearch,
-    onSearchChange: setLocalSearch
-  }
-}
+    onSearchChange: setLocalSearch,
+  };
+};

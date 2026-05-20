@@ -1,4 +1,3 @@
-import { realtime } from "inngest";
 import { z } from "zod";
 
 export const nodeStatusSchema = z.object({

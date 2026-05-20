@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { Node } from "@/generated/prisma/client";
+import type { Node, Prisma } from "@/generated/prisma/client";
 
 type GoogleFormTriggerNode = Pick<Node, "id" | "workflowId" | "data">;
 
@@ -137,7 +137,7 @@ export async function claimGoogleFormId(
 
     await prisma.node.update({
       where: { id: node.id },
-      data: { data: nextData },
+      data: { data: nextData as Prisma.InputJsonValue },
     });
   }
 
@@ -153,7 +153,7 @@ export async function claimGoogleFormId(
         ...data,
         formId,
         formIdClaimedAt: new Date().toISOString(),
-      },
+      } as Prisma.InputJsonValue,
     },
   });
 }

@@ -77,7 +77,7 @@ export const StripeTriggerDialog = ({
             <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
               <li>Open your Stripe Dashboard</li>
               <li>Go to Developers → Webhooks</li>
-              <li>Click "Add endpoint"</li>
+              <li>Click &quot;Add endpoint&quot;</li>
               <li>Paste the webhook URL above</li>
               <li>Select events to listen for (e.g., payment_intent.succeeded)</li>
               <li>Save and copy the signing secret</li>

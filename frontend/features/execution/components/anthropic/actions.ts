@@ -1,12 +1,12 @@
 "use server";
 
 import { getClientSubscriptionToken } from "inngest/react";
-import { stripeTriggerChannel } from "@/inngest/channels/stripe-trigger";
+import { anthropicChannel } from "@/inngest/channels/anthropic";
 import { inngest } from "@/inngest/client";
 
-export async function fetchStripeTriggerRealtimeToken() {
+export async function fetchAnthropicRealtimeToken() {
   return getClientSubscriptionToken(inngest, {
-    channel: stripeTriggerChannel,
+    channel: anthropicChannel,
     topics: ["status"],
   });
 }
