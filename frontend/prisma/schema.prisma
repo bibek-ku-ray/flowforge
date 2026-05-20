@@ -7,12 +7,27 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum TriggerKind {
+  MANUAL
+  GOOGLE_FORM
+  STRIPE
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
   name          String?
   emailVerified Boolean   @default(false)
   image         String?
+  role          UserRole  @default(USER)
+  banned        Boolean   @default(false)
+  banReason     String?
+  banExpires    DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
@@ -23,16 +38,25 @@ model User {
   @@map("user")
 }
 
+model TriggerSetting {
+  kind      TriggerKind @id
+  enabled   Boolean     @default(true)
+  updatedAt DateTime    @updatedAt
+
+  @@map("trigger_setting")
+}
+
 model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String   @id
+  expiresAt       DateTime
+  token           String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  ipAddress       String?
+  userAgent       String?
+  impersonatedBy  String?
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([token])
   @@index([userId])

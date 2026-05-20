@@ -1,4 +1,8 @@
-import { sendWorkflowExecution } from "@/inngest/utils";
+import { TriggerKind } from "@/generated/prisma/enums";
+import {
+  sendWorkflowExecution,
+  TriggerDisabledError,
+} from "@/inngest/utils";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -24,20 +28,29 @@ export async function POST(request: NextRequest) {
       raw: body.data?.object,
     };
 
-    // Trigger an Inngest job
-    await sendWorkflowExecution({
-      workflowId,
-      initialData: {
-        stripe: stripeData,
+    await sendWorkflowExecution(
+      {
+        workflowId,
+        initialData: {
+          stripe: stripeData,
+        },
       },
-    });
+      { triggerKind: TriggerKind.STRIPE },
+    );
 
     return NextResponse.json(
       { success: true },
       { status: 200 },
     );
   } catch (error) {
-    console.error("Stripe webhook error:" , error);
+    if (error instanceof TriggerDisabledError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 403 },
+      );
+    }
+
+    console.error("Stripe webhook error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to process Stripe event" },
       { status: 500 },

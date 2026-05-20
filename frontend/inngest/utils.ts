@@ -5,6 +5,11 @@ import {
   type ExecuteWorkflowEventData,
 } from "./events";
 import { Connection, Node } from "@/generated/prisma/client";
+import type { TriggerKind } from "@/generated/prisma/enums";
+import {
+  assertTriggerEnabled,
+  TriggerDisabledError,
+} from "@/lib/triggers/enforcement";
 import toposort from "toposort";
 
 export const topologicalSort = (
@@ -51,8 +56,21 @@ export const topologicalSort = (
   return sortedNodeIds.map((id) => nodeMap.get(id)!).filter(Boolean);
 };
 
-export const sendWorkflowExecution = async (data: ExecuteWorkflowEventData) => {
+export type SendWorkflowExecutionOptions = {
+  triggerKind?: TriggerKind;
+};
+
+export const sendWorkflowExecution = async (
+  data: ExecuteWorkflowEventData,
+  options?: SendWorkflowExecutionOptions,
+) => {
+  if (options?.triggerKind) {
+    await assertTriggerEnabled(options.triggerKind);
+  }
+
   return inngest.send(
     executeWorkflowEvent.create(data, { id: createId() }),
   );
 };
+
+export { TriggerDisabledError };

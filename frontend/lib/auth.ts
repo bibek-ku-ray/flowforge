@@ -3,6 +3,10 @@ import "@/lib/suppress-pg-warning";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { admin } from "better-auth/plugins/admin";
+import { defaultRoles } from "better-auth/plugins/admin/access";
+import { nextCookies } from "better-auth/next-js";
+import { ADMIN_ROLE, DEFAULT_USER_ROLE } from "@/lib/permissions";
 import {
   polar,
   checkout,
@@ -36,6 +40,15 @@ export const auth = betterAuth({
     autoSignIn: true,
   },
   plugins: [
+    admin({
+      defaultRole: DEFAULT_USER_ROLE,
+      adminRoles: [ADMIN_ROLE],
+      roles: {
+        [DEFAULT_USER_ROLE]: defaultRoles.user,
+        [ADMIN_ROLE]: defaultRoles.admin,
+      },
+    }),
+    nextCookies(),
     polar({
       client: polarClient,
       createCustomerOnSignUp: true,

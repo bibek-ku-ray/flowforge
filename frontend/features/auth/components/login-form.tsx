@@ -34,8 +34,7 @@ const loginSchema = z.object({
 
 type LoginFormValue = z.infer<typeof loginSchema>;
 
-const LoginForm = () => {
-
+const LoginForm = ({ callbackURL = "/workflows" }: { callbackURL?: string }) => {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -51,10 +50,10 @@ const LoginForm = () => {
     await authClient.signIn.email({
         email: values.email,
         password: values.password,
-        callbackURL: "/workflows"
+        callbackURL,
       }, {
         onSuccess: () => {
-          router.push("/workflows")
+          router.push(callbackURL);
         },
         onError: (ctx) => {
           toast.error(ctx.error.message)

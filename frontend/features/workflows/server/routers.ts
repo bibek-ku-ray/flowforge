@@ -1,5 +1,6 @@
 import { PAGINATION } from "@/config/constants";
 import { prisma } from "@/lib/prisma";
+import { TRPCError } from "@trpc/server";
 import {
   createTRPCRouter,
   premiumProcedure,
@@ -10,7 +11,11 @@ import z from "zod";
 import type { Node, Edge } from "@xyflow/react";
 import { NodeType } from "@/generated/prisma/enums";
 import { claimGoogleFormId } from "@/lib/resolve-google-form-workflow";
-import { sendWorkflowExecution } from "@/inngest/utils";
+import { TriggerKind } from "@/generated/prisma/enums";
+import {
+  sendWorkflowExecution,
+  TriggerDisabledError,
+} from "@/inngest/utils";
 
 export const workflowsRouter = createTRPCRouter({
 
@@ -23,11 +28,22 @@ export const workflowsRouter = createTRPCRouter({
           userId: ctx.auth.user.id
         }
       })
-      await sendWorkflowExecution({
-        workflowId: input.id
-      })
+      try {
+        await sendWorkflowExecution(
+          { workflowId: input.id },
+          { triggerKind: TriggerKind.MANUAL },
+        );
+      } catch (error) {
+        if (error instanceof TriggerDisabledError) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Manual triggers are disabled platform-wide",
+          });
+        }
+        throw error;
+      }
 
-      return workflow
+      return workflow;
     }),
 
   create: premiumProcedure.mutation(({ ctx }) => {

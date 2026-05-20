@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { topologicalSort } from "./utils";
 import type { Prisma } from "@/generated/prisma/client";
 import { ExecutionStatus, NodeType } from "@/generated/prisma/enums";
+import { assertWorkflowTriggersEnabled } from "@/lib/triggers/enforcement";
 import { getExecutor } from "@/features/execution/libs/executor-registry";
 import { httpRequestChannel } from "./channels/http-request";
 import { manualTriggerChannel } from "./channels/manual-trigger";
@@ -82,6 +83,10 @@ export const executeWorkflow = inngest.createFunction(
           connections: true,
         },
       });
+
+      await assertWorkflowTriggersEnabled(
+        workflow.nodes.map((node) => node.type as NodeType),
+      );
 
       return {
         sortedNodes: topologicalSort(workflow.nodes, workflow.connections),

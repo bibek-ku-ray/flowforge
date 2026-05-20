@@ -1,11 +1,16 @@
-import {auth} from "@/lib/auth";
-import {headers} from "next/headers";
-import {redirect} from "next/navigation";
+import { auth } from "@/lib/auth";
+import { isAdminRole } from "@/lib/permissions";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
-export const requireAuth = async () => {
-  const session = await auth.api.getSession({
+export const getSession = async () => {
+  return auth.api.getSession({
     headers: await headers(),
   });
+};
+
+export const requireAuth = async () => {
+  const session = await getSession();
 
   if (!session) {
     redirect("/login");
@@ -15,11 +20,23 @@ export const requireAuth = async () => {
 };
 
 export const requireUnauth = async () => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (session) {
     redirect("/");
   }
+};
+
+export const requireAdmin = async () => {
+  const session = await getSession();
+
+  if (!session) {
+    redirect("/admin/login");
+  }
+
+  if (!isAdminRole(session.user.role)) {
+    redirect("/workflows");
+  }
+
+  return session;
 };

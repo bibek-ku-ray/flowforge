@@ -1,10 +1,11 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import { auth } from "@/lib/auth";
+import { isAdminRole } from "@/lib/permissions";
 import { headers } from "next/headers";
 import { cache } from "react";
 import { makeQueryClient } from "@/trpc/query-client";
 import { polarClient } from "@/lib/polar";
-import superjson from 'superjson'
+import superjson from "superjson";
 
 /**
  * This context creator accepts `headers` so it can be reused in both
@@ -62,3 +63,14 @@ export const premiumProcedure = protectedProcedure.use(
     return next({ ctx: { ...ctx, customer } });
   },
 );
+
+export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  if (!isAdminRole(ctx.auth.user.role)) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Administrator access required",
+    });
+  }
+
+  return next({ ctx });
+});

@@ -1,4 +1,8 @@
-import { sendWorkflowExecution } from "@/inngest/utils";
+import { TriggerKind } from "@/generated/prisma/enums";
+import {
+  sendWorkflowExecution,
+  TriggerDisabledError,
+} from "@/inngest/utils";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -25,20 +29,29 @@ export async function POST(request: NextRequest) {
       raw: body,
     };
 
-    // Trigger an Inngest job
-    await sendWorkflowExecution({
-      workflowId,
-      initialData: {
-        googleForm: formData,
+    await sendWorkflowExecution(
+      {
+        workflowId,
+        initialData: {
+          googleForm: formData,
+        },
       },
-    });
+      { triggerKind: TriggerKind.GOOGLE_FORM },
+    );
 
     return NextResponse.json(
       { success: true },
       { status: 200 },
     );
   } catch (error) {
-    console.error("Google form webhook error:" , error);
+    if (error instanceof TriggerDisabledError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 403 },
+      );
+    }
+
+    console.error("Google form webhook error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to process Google Form submission" },
       { status: 500 },
