@@ -4,6 +4,7 @@ import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import type { NodeExecutor } from "@/features/execution/types";
 import { publishNodeStatus } from "@/features/execution/lib/publish-execution-event";
+import { prisma } from "@/lib/prisma";
 
 Handlebars.registerHelper("json", (context) => {
   const jsonString = JSON.stringify(context, null, 2);
@@ -14,6 +15,7 @@ Handlebars.registerHelper("json", (context) => {
 
 type OpenAiData = {
   variableName?: string;
+  credentialId?: string;
   systemPrompt?: string;
   userPrompt?: string;
 };
@@ -34,6 +36,11 @@ export const openAiExecutor: NodeExecutor<OpenAiData> = async ({
     throw new NonRetriableError("OpenAi node: Variable name is missing");
   }
 
+  if (!data.credentialId) {
+    await publishNodeStatus(publish, workflowId, nodeId, nodeType, "error");
+    throw new NonRetriableError("OpenAI node: Credential is required");
+  }
+
   if (!data.userPrompt) {
     await publishNodeStatus(publish, workflowId, nodeId, nodeType, "error");
     throw new NonRetriableError("OpenAi node: User prompt is missing");
@@ -44,10 +51,21 @@ export const openAiExecutor: NodeExecutor<OpenAiData> = async ({
     : "You are a helpful assistant.";
   const userPrompt = Handlebars.compile(data.userPrompt)(context);
 
-  const credentialValue = process.env.OPENAI_API_KEY!;
+  const credential = await step.run("get-credential", () => {
+    return prisma.credential.findUnique({
+      where: {
+        id: data.credentialId,
+      },
+    });
+  });
+
+  if (!credential) {
+    await publishNodeStatus(publish, workflowId, nodeId, nodeType, "error");
+    throw new NonRetriableError("OpenAI node: Credential not found");
+  }
 
   const openai = createOpenAI({
-    apiKey: credentialValue,
+    apiKey: credential.value,
   });
 
   try {
@@ -67,9 +85,7 @@ export const openAiExecutor: NodeExecutor<OpenAiData> = async ({
     );
 
     const text =
-      steps[0].content[0].type === "text"
-        ? steps[0].content[0].text
-        : "";
+      steps[0].content[0].type === "text" ? steps[0].content[0].text : "";
 
     await publishNodeStatus(publish, workflowId, nodeId, nodeType, "success");
 

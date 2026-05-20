@@ -18,6 +18,7 @@ import {
   useSuspenseWorkflows,
 } from "@/features/workflows/hooks/use-workflows";
 import { WorkflowIcon } from "lucide-react";
+import { format } from "date-fns";
 
 export const WorkflowContainer = ({
   children,
@@ -68,7 +69,7 @@ export const WorkflowList = () => {
           <EntityItem
             href={`/workflows/${item.id}`}
             title={item.name}
-            subtitle={new Date(item.updatedAt).toLocaleDateString()}
+            subtitle={format(new Date(item.updatedAt), "M/d/yyyy")}
             image={
               <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <WorkflowIcon className="size-5 text-primary" />
