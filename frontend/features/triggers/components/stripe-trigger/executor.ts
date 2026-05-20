@@ -1,29 +1,26 @@
-import type { NodeExecutor } from "@/features/executions/types";
-import { stripeTriggerChannel } from "@/inngest/channels/stripe-trigger";
+import type { NodeExecutor } from "@/features/execution/types";
+import { publishNodeStatus } from "@/features/execution/lib/publish-execution-event";
 
 type StripeTriggerData = Record<string, unknown>;
 
 export const stripeTriggerExecutor: NodeExecutor<StripeTriggerData> = async ({
   nodeId,
+  nodeType,
+  workflowId,
   context,
   step,
   publish,
 }) => {
-  await publish(
-    stripeTriggerChannel().status({
-      nodeId,
-      status: "loading",
-    }),
-  );
+  await publishNodeStatus(publish, workflowId, nodeId, nodeType, "loading");
 
-  const result = await step.run("stripe-trigger", async () => context);
+  try {
+    const result = await step.run("stripe-trigger", async () => context);
 
-  await publish(
-    stripeTriggerChannel().status({
-      nodeId,
-      status: "success",
-    }),
-  );
+    await publishNodeStatus(publish, workflowId, nodeId, nodeType, "success");
 
-  return result;
+    return result;
+  } catch (error) {
+    await publishNodeStatus(publish, workflowId, nodeId, nodeType, "error");
+    throw error;
+  }
 };
