@@ -5,8 +5,8 @@ import {
   TRPCQueryOptions,
 } from "@trpc/tanstack-react-query";
 import { headers } from "next/headers";
-import React, { cache } from "react";
-import { createTRPCContext, getQueryClient, createCallerFactory } from "./init";
+import React from "react";
+import { createTRPCContext, getQueryClient } from "./init";
 import { appRouter } from "@/trpc/router/_app";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 
@@ -21,19 +21,6 @@ export const trpc = createTRPCOptionsProxy({
   router: appRouter,
   queryClient: getQueryClient,
 });
-
-// Server-side caller for RSC
-const getCaller = cache(async () => {
-  const createCaller = createCallerFactory(appRouter);
-  return createCaller(await createTRPCContext({ headers: await headers() }));
-});
-
-export const caller = {
-  async getUsers() {
-    const callerInstance = await getCaller();
-    return callerInstance.getUsers();
-  },
-};
 
 export function HydrateClient(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient();

@@ -1,4 +1,3 @@
-// Fix: 
 import { NodeProps } from "@xyflow/react";
 import { memo, useState } from "react";
 import { BaseTriggerNode } from "../base-trigger-node";
@@ -34,3 +33,5 @@ export const ManualTriggerNode = memo((props: NodeProps) => {
     </>
   );
 });
+
+ManualTriggerNode.displayName = "ManualTriggerNode";

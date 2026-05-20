@@ -10,6 +10,12 @@ import {
   usage,
   webhooks,
 } from "@polar-sh/better-auth";
+import {
+  getAllowedHosts,
+  getAppUrlFallback,
+  getPolarSuccessUrl,
+  getTrustedOrigins,
+} from "./app-url";
 import { polarClient } from "./polar";
 
 const prisma = new PrismaClient({
@@ -17,6 +23,12 @@ const prisma = new PrismaClient({
 });
 
 export const auth = betterAuth({
+  baseURL: {
+    allowedHosts: getAllowedHosts(),
+    fallback: getAppUrlFallback(),
+    protocol: "auto",
+  },
+  trustedOrigins: getTrustedOrigins(),
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
@@ -36,7 +48,7 @@ export const auth = betterAuth({
               slug: "pro", // Custom slug for easy reference in Checkout URL, e.g. /checkout/pro
             },
           ],
-          successUrl: process.env.POLAR_SUCCESS_URL,
+          successUrl: getPolarSuccessUrl(),
           authenticatedUsersOnly: true,
         }),
         portal(),

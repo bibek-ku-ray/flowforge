@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { getAllowedDevOrigins } from "./lib/app-url";
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -6,14 +7,20 @@ const nextConfig: NextConfig = {
   devIndicators: false,
 
   async redirects() {
-    return [ 
+    return [
       {
         source: "/",
         destination: "/workflows",
-        permanent: false
-      }
-    ]
-  }
+        permanent: false,
+      },
+      {
+        source: "/api/workflows/google-form",
+        destination: "/api/webhooks/google-form",
+        permanent: false,
+      },
+    ];
+  },
+  allowedDevOrigins: getAllowedDevOrigins(),
 };
 
 export default nextConfig;
