@@ -22,8 +22,8 @@ import { Textarea } from "@/components/ui/textarea";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useDialogFormReset } from "@/features/execution/hooks/use-dialog-form-reset";
 import { useCredentialsByType } from "@/features/credentials/hooks/use-credentials";
 import { CredentialType } from "@/generated/prisma/enums";
 import {
@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Image from "next/image";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   variableName: z
@@ -67,39 +68,36 @@ export const OpenAiDialog = ({
     isLoading: isLoadingCredentials,
   } = useCredentialsByType(CredentialType.OPENAI);
 
+  const initialValues = {
+    variableName: defaultValues.variableName || "",
+    credentialId: defaultValues.credentialId || "",
+    systemPrompt: defaultValues.systemPrompt || "",
+    userPrompt: defaultValues.userPrompt || "",
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      variableName: defaultValues.variableName || "",
-      credentialId: defaultValues.credentialId || "",
-      systemPrompt: defaultValues.systemPrompt || "",
-      userPrompt: defaultValues.userPrompt || "",
-    },
+    defaultValues: initialValues,
   });
 
-  // Reset form values when dialog opens with new defaults
-  useEffect(() => {
-    if (open) {
-      form.reset({
-        variableName: defaultValues.variableName || "",
-        credentialId: defaultValues.credentialId || "",
-        systemPrompt: defaultValues.systemPrompt || "",
-        userPrompt: defaultValues.userPrompt || "",
-      });
-    }
-  }, [open, defaultValues, form]);
+  useDialogFormReset(form, open, initialValues);
 
   const watchVariableName =
-    useWatch({ control: form.control, name: "variableName" }) || "myOpenAi";
+    useWatch({ control: form.control, name: "variableName" }) || "openai";
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     onSubmit(values);
     onOpenChange(false);
+    toast.success("OpenAI configuration saved");
+  };
+
+  const handleInvalid = () => {
+    toast.error("Please complete all required fields before saving");
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>OpenAI Configuration</DialogTitle>
           <DialogDescription>
@@ -108,7 +106,7 @@ export const OpenAiDialog = ({
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
+            onSubmit={form.handleSubmit(handleSubmit, handleInvalid)}
             className="space-y-8 mt-4"
           >
             <FormField
@@ -119,7 +117,7 @@ export const OpenAiDialog = ({
                   <FormLabel>Variable Name</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="myOpenAi"
+                      placeholder="openai"
                       {...field}
                     />
                   </FormControl>
@@ -140,7 +138,7 @@ export const OpenAiDialog = ({
                   <FormLabel>OpenAI Credential</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
                     disabled={
                       isLoadingCredentials
                       || !credentials?.length
@@ -209,7 +207,7 @@ export const OpenAiDialog = ({
                   />
                 </FormControl>
                   <FormDescription>
-                    The prompt to send to the AI. Use {"{{variables}}"} for simple values or {"{{json variable}}"} to stringify objects
+                    Input for the AI only (never sent to Discord). Use {"{{json googleForm}}"} for form data. Output is structured as {"{ discordMessage }"} for the Discord node.
                   </FormDescription>
                 <FormMessage />
               </FormItem>

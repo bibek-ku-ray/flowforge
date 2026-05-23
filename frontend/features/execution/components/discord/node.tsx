@@ -8,6 +8,8 @@ import { DiscordDialog, DiscordFormValues } from "./dialog";
 
 type DiscordNodeData = {
   webhookUrl?: string;
+  aiSourceVariable?: string;
+  /** @deprecated Migrated to aiSourceVariable */
   content?: string;
 };
 
@@ -36,8 +38,11 @@ export const DiscordNode = memo((props: NodeProps<DiscordNodeType>) => {
   };
 
   const nodeData = props.data;
-  const description = nodeData?.content
-    ? `Send: ${nodeData.content.slice(0, 50)}...`
+  const aiSource =
+    nodeData?.aiSourceVariable ||
+    (nodeData?.content?.match(/\{\{(\w+)\.text\}\}/)?.[1] ?? "");
+  const description = aiSource
+    ? `AI → Discord: {{${aiSource}.text}}`
     : "Not configured";
 
   return (

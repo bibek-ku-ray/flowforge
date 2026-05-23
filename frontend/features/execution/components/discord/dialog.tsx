@@ -18,25 +18,31 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
-import { useEffect } from "react";
+import { useDialogFormReset } from "@/features/execution/hooks/use-dialog-form-reset";
 import { Button } from "@/components/ui/button";
+import { parseAiSourceFromContentTemplate } from "@/lib/ai/resolve-ai-source";
+
+const identifier = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 
 const formSchema = z.object({
   variableName: z
     .string()
     .min(1, { message: "Variable name is required" })
-    .regex(/^[A-Za-z_$][A-Za-z0-9_$]*$/, { 
-      message: "Variable name must start with a letter or underscore and container only letters, numbers, and underscores",
+    .regex(identifier, {
+      message:
+        "Variable name must start with a letter or underscore and contain only letters, numbers, and underscores",
+    }),
+  aiSourceVariable: z
+    .string()
+    .min(1, "AI source variable is required")
+    .regex(identifier, {
+      message:
+        "AI source must start with a letter or underscore and contain only letters, numbers, and underscores",
     }),
   username: z.string().optional(),
-  content: z
-    .string()
-    .min(1, "Message content is required")
-    .max(2000, "Discord messages cannot exceed 2000 characters"),
   webhookUrl: z.string().min(1, "Webhook URL is required"),
 });
 
@@ -45,9 +51,24 @@ export type DiscordFormValues = z.infer<typeof formSchema>;
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (values: z.infer<typeof formSchema>) => void;
-  defaultValues?: Partial<DiscordFormValues>;
-};
+  onSubmit: (values: DiscordFormValues) => void;
+  defaultValues?: Partial<DiscordFormValues> & { content?: string };
+}
+
+function resolveInitialAiSource(
+  defaultValues: Partial<DiscordFormValues> & { content?: string },
+): string {
+  if (defaultValues.aiSourceVariable?.trim()) {
+    return defaultValues.aiSourceVariable.trim();
+  }
+
+  const fromLegacy = parseAiSourceFromContentTemplate(defaultValues.content);
+  if (fromLegacy) {
+    return fromLegacy;
+  }
+
+  return "openai";
+}
 
 export const DiscordDialog = ({
   open,
@@ -55,32 +76,26 @@ export const DiscordDialog = ({
   onSubmit,
   defaultValues = {},
 }: Props) => {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const initialValues = {
+    variableName: defaultValues.variableName || "",
+    aiSourceVariable: resolveInitialAiSource(defaultValues),
+    username: defaultValues.username || "",
+    webhookUrl: defaultValues.webhookUrl || "",
+  };
+
+  const form = useForm<DiscordFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      variableName: defaultValues.variableName || "",
-      username: defaultValues.username || "",
-      content: defaultValues.content || "",
-      webhookUrl: defaultValues.webhookUrl || "",
-    },
+    defaultValues: initialValues,
   });
 
-  // Reset form values when dialog opens with new defaults
-  useEffect(() => {
-    if (open) {
-      form.reset({
-        variableName: defaultValues.variableName || "",
-        username: defaultValues.username || "",
-        content: defaultValues.content || "",
-        webhookUrl: defaultValues.webhookUrl || "",
-      });
-    }
-  }, [open, defaultValues, form]);
+  useDialogFormReset(form, open, initialValues);
 
   const watchVariableName =
     useWatch({ control: form.control, name: "variableName" }) || "myDiscord";
+  const watchAiSource =
+    useWatch({ control: form.control, name: "aiSourceVariable" }) || "myOpenAi";
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = (values: DiscordFormValues) => {
     onSubmit(values);
     onOpenChange(false);
   };
@@ -91,7 +106,8 @@ export const DiscordDialog = ({
         <DialogHeader>
           <DialogTitle>Discord Configuration</DialogTitle>
           <DialogDescription>
-            Configure the Discord webhook settings for this node.
+            Posts only the validated final AI message to your channel (max 2,000
+            characters). Prompt text is never sent.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -106,14 +122,30 @@ export const DiscordDialog = ({
                 <FormItem>
                   <FormLabel>Variable Name</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="myDiscord"
-                      {...field}
-                    />
+                    <Input placeholder="myDiscord" {...field} />
                   </FormControl>
                   <FormDescription>
-                    Use this name to reference the result in other nodes:{" "}
-                    {`{{${watchVariableName}.text}}`}
+                    Other nodes can read the sent message as{" "}
+                    {`{{${watchVariableName}.messageContent}}`}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="aiSourceVariable"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>AI Source Variable</FormLabel>
+                  <FormControl>
+                    <Input placeholder="openai" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Must match the OpenAI node Variable Name. Discord sends{" "}
+                    <code className="text-xs">{`{ "content": "{{${watchAiSource}.text}}" }`}</code>{" "}
+                    after validation — not prompts or form data.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -133,7 +165,7 @@ export const DiscordDialog = ({
                     />
                   </FormControl>
                   <FormDescription>
-                    Get this from Discord: Channel Settings → Integrations → Webhooks
+                    Discord → Channel Settings → Integrations → Webhooks
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -142,40 +174,13 @@ export const DiscordDialog = ({
 
             <FormField
               control={form.control}
-              name="content"
-              render={({ field }) => (
-              <FormItem>
-                <FormLabel>Message Content</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Summary: {{myGemini.text}}"
-                    className="min-h-[80px] font-mono text-sm"
-                    {...field}
-                  />
-                </FormControl>
-                  <FormDescription>
-                    The message to send. Use {"{{variables}}"} for simple values
-                    or {"{{json variable}}"} to stringify objects
-                  </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-            />
-            <FormField
-              control={form.control}
               name="username"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Bot Username (Optional)</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Workflow Bot"
-                      {...field}
-                    />
+                    <Input placeholder="Workflow Bot" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    Override the webhook&apos;s default username
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

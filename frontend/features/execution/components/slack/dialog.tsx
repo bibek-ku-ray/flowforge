@@ -22,7 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
-import { useEffect } from "react";
+import { useDialogFormReset } from "@/features/execution/hooks/use-dialog-form-reset";
 import { Button } from "@/components/ui/button";
 
 const formSchema = z.object({
@@ -53,25 +53,18 @@ export const SlackDialog = ({
   onSubmit,
   defaultValues = {},
 }: Props) => {
+  const initialValues = {
+    variableName: defaultValues.variableName || "",
+    content: defaultValues.content || "",
+    webhookUrl: defaultValues.webhookUrl || "",
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      variableName: defaultValues.variableName || "",
-      content: defaultValues.content || "",
-      webhookUrl: defaultValues.webhookUrl || "",
-    },
+    defaultValues: initialValues,
   });
 
-  // Reset form values when dialog opens with new defaults
-  useEffect(() => {
-    if (open) {
-      form.reset({
-        variableName: defaultValues.variableName || "",
-        content: defaultValues.content || "",
-        webhookUrl: defaultValues.webhookUrl || "",
-      });
-    }
-  }, [open, defaultValues, form]);
+  useDialogFormReset(form, open, initialValues);
 
   const watchVariableName =
     useWatch({ control: form.control, name: "variableName" }) || "mySlack";

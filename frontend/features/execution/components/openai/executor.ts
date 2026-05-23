@@ -1,11 +1,19 @@
 import Handlebars from "handlebars";
 import { NonRetriableError } from "inngest";
-import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import type { NodeExecutor } from "@/features/execution/types";
 import { publishNodeStatus } from "@/features/execution/lib/publish-execution-event";
+import {
+  generateDiscordAiOutput,
+  OPENAI_STRUCTURED_OUTPUT_MODEL,
+} from "@/lib/ai/generate-discord-ai-output";
+import {
+  createAiNodeOutput,
+  mergeOpenAiIntoContext,
+} from "@/lib/ai/workflow-context";
 import { prisma } from "@/lib/prisma";
 import { decrypt } from "@/lib/encryption";
+import { logger } from "@/lib/logger";
 
 Handlebars.registerHelper("json", (context) => {
   const jsonString = JSON.stringify(context, null, 2);
@@ -51,13 +59,18 @@ export const openAiExecutor: NodeExecutor<OpenAiData> = async ({
   const systemPrompt = data.systemPrompt
     ? Handlebars.compile(data.systemPrompt)(context)
     : "You are a helpful assistant.";
-  const userPrompt = Handlebars.compile(data.userPrompt)(context);
+
+  const userPromptTemplate = data.userPrompt.replace(
+    /\{\{FORM_SUBMISSION_DATA\}\}/gi,
+    "{{json googleForm}}",
+  );
+  const userPrompt = Handlebars.compile(userPromptTemplate)(context);
 
   const credential = await step.run("get-credential", () => {
     return prisma.credential.findUnique({
       where: {
         id: data.credentialId,
-        userId
+        userId,
       },
     });
   });
@@ -68,37 +81,42 @@ export const openAiExecutor: NodeExecutor<OpenAiData> = async ({
   }
 
   const openai = createOpenAI({
-    apiKey: decrypt(credential.value),  });
+    apiKey: decrypt(credential.value),
+  });
 
   try {
-    const { steps } = await step.ai.wrap(
-      "openai-generate-text",
-      generateText,
+    const result = await step.ai.wrap(
+      "openai-generate-structured",
+      generateDiscordAiOutput,
       {
-        model: openai("gpt-4"),
-        system: systemPrompt,
-        prompt: userPrompt,
-        experimental_telemetry: {
-          isEnabled: true,
-          recordInputs: true,
-          recordOutputs: true,
-        },
+        structuredModel: openai(OPENAI_STRUCTURED_OUTPUT_MODEL),
+        fallbackModel: openai("gpt-4"),
+        systemPrompt,
+        userPrompt,
       },
     );
 
-    const text =
-      steps[0].content[0].type === "text" ? steps[0].content[0].text : "";
+    if (result.usedFallback) {
+      logger.warn("openai.structured_output.fallback", {
+        workflowId,
+        nodeId,
+        modelUsed: result.modelUsed,
+      });
+    }
 
     await publishNodeStatus(publish, workflowId, nodeId, nodeType, "success");
 
-    return {
-      ...context,
-      [data.variableName]: {
-        text,
-      },
-    };
+    const entry = createAiNodeOutput(
+      result.message,
+      result.structured,
+    );
+
+    return mergeOpenAiIntoContext(context, data.variableName, entry);
   } catch (error) {
     await publishNodeStatus(publish, workflowId, nodeId, nodeType, "error");
-    throw error;
+
+    const message =
+      error instanceof Error ? error.message : "OpenAI generation failed";
+    throw new NonRetriableError(`OpenAI node: ${message}`);
   }
 };

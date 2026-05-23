@@ -22,7 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
-import { useEffect } from "react";
+import { useDialogFormReset } from "@/features/execution/hooks/use-dialog-form-reset";
 import { Button } from "@/components/ui/button";
 import { useCredentialsByType } from "@/features/credentials/hooks/use-credentials";
 import { CredentialType } from "@/generated/prisma/enums";
@@ -70,27 +70,19 @@ export const AnthropicDialog = ({
   } = useCredentialsByType(CredentialType.ANTHROPIC);
 
 
+  const initialValues = {
+    variableName: defaultValues.variableName || "",
+    credentialId: defaultValues.credentialId || "",
+    systemPrompt: defaultValues.systemPrompt || "",
+    userPrompt: defaultValues.userPrompt || "",
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      variableName: defaultValues.variableName || "",
-      credentialId: defaultValues.credentialId || "",
-      systemPrompt: defaultValues.systemPrompt || "",
-      userPrompt: defaultValues.userPrompt || "",
-    },
+    defaultValues: initialValues,
   });
 
-  // Reset form values when dialog opens with new defaults
-  useEffect(() => {
-    if (open) {
-      form.reset({
-        variableName: defaultValues.variableName || "",
-        systemPrompt: defaultValues.systemPrompt || "",
-        credentialId: defaultValues.credentialId || "",
-        userPrompt: defaultValues.userPrompt || "",
-      });
-    }
-  }, [open, defaultValues, form]);
+  useDialogFormReset(form, open, initialValues);
 
   const watchVariableName =
     useWatch({ control: form.control, name: "variableName" }) || "myAnthropic";

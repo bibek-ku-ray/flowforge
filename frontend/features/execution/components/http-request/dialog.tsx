@@ -28,8 +28,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { useDialogFormReset } from "@/features/execution/hooks/use-dialog-form-reset";
 import { z } from "zod";
 
 const formSchema = z.object({
@@ -60,26 +60,19 @@ export const HttpRequestDialog = ({
   onSubmit,
   defaultValues = {},
 }: Props) => {
+  const initialValues = {
+    variableName: defaultValues.variableName || "",
+    endpoint: defaultValues.endpoint || "",
+    method: defaultValues.method || "GET",
+    body: defaultValues.body || "",
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      variableName: defaultValues.variableName || "",
-      endpoint: defaultValues.endpoint || "",
-      method: defaultValues.method || "GET",
-      body: defaultValues.body || "",
-    },
+    defaultValues: initialValues,
   });
 
-  useEffect(() => {
-    if (open) {
-      form.reset({
-        variableName: defaultValues.variableName || "",
-        endpoint: defaultValues.endpoint || "",
-        method: defaultValues.method || "GET",
-        body: defaultValues.body || "",
-      });
-    }
-  }, [open, defaultValues, form]);
+  useDialogFormReset(form, open, initialValues);
 
   const watchVariableName =
     useWatch({ control: form.control, name: "variableName" }) || "myApiCall";
