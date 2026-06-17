@@ -1,5 +1,5 @@
-# docs
-**/docs
+# docs (frontend build/generated docs only; the repo-root docs/ is tracked)
+/frontend/docs
 
 # vscode
 .vscode/
