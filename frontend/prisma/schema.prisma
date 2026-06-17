@@ -175,6 +175,7 @@ enum NodeType {
   DISCORD
   SLACK
   SCHEDULE_TRIGGER
+  LOOP
 }
 
 model Node {

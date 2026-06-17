@@ -9,6 +9,7 @@ import { isAiNodeOutput } from "@/lib/ai/types";
 import { validateAndExtractDiscordMessage } from "@/lib/ai/validate-ai-output";
 import { sendDiscordWebhook } from "@/lib/discord/send-webhook";
 import { logger } from "@/lib/logger";
+import { makeStepId } from "@/features/execution/lib/step-id";
 
 Handlebars.registerHelper("json", (context) => {
   const jsonString = JSON.stringify(context, null, 2);
@@ -63,6 +64,7 @@ export const discordExecutor: NodeExecutor<DiscordData> = async ({
   context,
   step,
   publish,
+  iterationKey,
 }) => {
   await publishNodeStatus(publish, workflowId, nodeId, nodeType, "loading");
 
@@ -77,7 +79,7 @@ export const discordExecutor: NodeExecutor<DiscordData> = async ({
   }
 
   try {
-    const content = await step.run("validate-ai-output", async () => {
+    const content = await step.run(makeStepId("validate-ai-output", nodeId, iterationKey), async () => {
       const asserted = assertAiSourceInContext(
         context,
         aiSource.variableName,
@@ -114,7 +116,7 @@ export const discordExecutor: NodeExecutor<DiscordData> = async ({
 
     const username = renderTemplate(data.username, context);
 
-    const result = await step.run("discord-webhook", async () => {
+    const result = await step.run(makeStepId("discord-webhook", nodeId, iterationKey), async () => {
       if (!data.webhookUrl) {
         throw new NonRetriableError("Discord node: Webhook URL is required");
       }

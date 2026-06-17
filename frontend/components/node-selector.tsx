@@ -1,6 +1,6 @@
 import { createId } from "@paralleldrive/cuid2";
 import { NodeType } from "@/generated/prisma/enums";
-import { ClockIcon, GlobeIcon, MousePointerIcon } from "lucide-react";
+import { ClockIcon, GlobeIcon, MousePointerIcon, RepeatIcon } from "lucide-react";
 import { ReactNode, useCallback } from "react";
 import {
   Sheet,
@@ -87,6 +87,12 @@ const executionNodes: NodeTypeOption[] = [
     label: "HTTP Request",
     description: "Makes an HTTP request",
     icon: GlobeIcon,
+  },
+  {
+    type: NodeType.LOOP,
+    label: "Loop / For Each",
+    description: "Run downstream nodes once per item in an array",
+    icon: RepeatIcon,
   },
 ];
 

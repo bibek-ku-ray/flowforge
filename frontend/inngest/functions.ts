@@ -2,10 +2,12 @@ import { NonRetriableError } from "inngest";
 import { inngest } from "./client";
 import { prisma } from "@/lib/prisma";
 import { topologicalSort } from "./utils";
+import { executeGraph } from "./execute-graph";
 import type { Prisma } from "@/generated/prisma/client";
 import { ExecutionStatus, NodeType } from "@/generated/prisma/enums";
 import { assertWorkflowTriggersEnabled } from "@/lib/triggers/enforcement";
 import { getExecutor } from "@/features/execution/libs/executor-registry";
+import { publishNodeStatus } from "@/features/execution/lib/publish-execution-event";
 import { httpRequestChannel } from "./channels/http-request";
 import { manualTriggerChannel } from "./channels/manual-trigger";
 import { googleFormTriggerChannel } from "./channels/google-form-trigger";
@@ -78,43 +80,61 @@ export const executeWorkflow = inngest.createFunction(
         });
     
 
-    const { sortedNodes, userId } = await step.run("prepare-workflow", async () => {
-      const workflow = await prisma.workflow.findUniqueOrThrow({
-        where: { id: workflowId },
-        include: {
-          nodes: true,
-          connections: true,
-        },
-      });
+    const { sortedNodes, connections, userId } = await step.run(
+      "prepare-workflow",
+      async () => {
+        const workflow = await prisma.workflow.findUniqueOrThrow({
+          where: { id: workflowId },
+          include: {
+            nodes: true,
+            connections: true,
+          },
+        });
 
-      await assertWorkflowTriggersEnabled(
-        workflow.nodes.map((node) => node.type as NodeType),
-      );
+        await assertWorkflowTriggersEnabled(
+          workflow.nodes.map((node) => node.type as NodeType),
+        );
 
-      return {
-        sortedNodes: topologicalSort(workflow.nodes, workflow.connections),
-        userId: workflow.userId,
-      };
-    });
+        return {
+          sortedNodes: topologicalSort(workflow.nodes, workflow.connections),
+          connections: workflow.connections,
+          userId: workflow.userId,
+        };
+      },
+    );
 
     await publishExecutionStarted(publish, workflowId);
 
-    let context = initialData ?? {};
+    const initialContext = initialData ?? {};
 
     try {
-      for (const node of sortedNodes) {
-        const executor = getExecutor(node.type as NodeType);
-        context = await executor({
-          data: node.data as Record<string, unknown>,
-          nodeId: node.id,
-          nodeType: node.type,
-          workflowId,
-          userId,
-          context,
-          step,
-          publish,
-        });
-      }
+      const context = await executeGraph(
+        sortedNodes,
+        connections,
+        initialContext,
+        (node, nodeContext, iterationKey) => {
+          const executor = getExecutor(node.type as NodeType);
+          return executor({
+            data: node.data as Record<string, unknown>,
+            nodeId: node.id,
+            nodeType: node.type,
+            workflowId,
+            userId,
+            context: nodeContext,
+            step,
+            publish,
+            iterationKey,
+          });
+        },
+        {
+          onLoopStart: (node) =>
+            publishNodeStatus(publish, workflowId, node.id, node.type, "loading"),
+          onLoopSuccess: (node) =>
+            publishNodeStatus(publish, workflowId, node.id, node.type, "success"),
+          onLoopError: (node) =>
+            publishNodeStatus(publish, workflowId, node.id, node.type, "error"),
+        },
+      );
 
       await publishExecutionCompleted(publish, workflowId, true);
 

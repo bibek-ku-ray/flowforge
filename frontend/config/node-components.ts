@@ -11,6 +11,7 @@ import { NodeType } from "@/generated/prisma/enums";
 import type { NodeTypes } from "@xyflow/react";
 import { DiscordNode } from "@/features/execution/components/discord/node";
 import { SlackNode } from "@/features/execution/components/slack/node";
+import { LoopNode } from "@/features/execution/components/loop/node";
 
 export const nodeComponents = {
   [NodeType.INITIAL]: InitialNode,
@@ -24,6 +25,7 @@ export const nodeComponents = {
   [NodeType.ANTHROPIC]: AnthropicNode,
   [NodeType.DISCORD]: DiscordNode,
   [NodeType.SLACK]: SlackNode,
+  [NodeType.LOOP]: LoopNode,
 
 } as const satisfies NodeTypes
 

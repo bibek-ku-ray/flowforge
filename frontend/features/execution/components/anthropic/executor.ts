@@ -6,6 +6,7 @@ import type { NodeExecutor } from "@/features/execution/types";
 import { publishNodeStatus } from "@/features/execution/lib/publish-execution-event";
 import { prisma } from "@/lib/prisma";
 import { decrypt } from "@/lib/encryption";
+import { makeStepId } from "@/features/execution/lib/step-id";
 
 Handlebars.registerHelper("json", (context) => {
   const jsonString = JSON.stringify(context, null, 2);
@@ -30,6 +31,7 @@ export const anthropicExecutor: NodeExecutor<AnthropicData> = async ({
   context,
   step,
   publish,
+  iterationKey,
 }) => {
   await publishNodeStatus(publish, workflowId, nodeId, nodeType, "loading");
 
@@ -53,7 +55,7 @@ export const anthropicExecutor: NodeExecutor<AnthropicData> = async ({
     : "You are a helpful assistant.";
   const userPrompt = Handlebars.compile(data.userPrompt)(context);
 
-  const credential = await step.run("get-credential", () => {
+  const credential = await step.run(makeStepId("get-credential", nodeId, iterationKey), () => {
     return prisma.credential.findUnique({
       where: {
         id: data.credentialId,
@@ -73,7 +75,7 @@ export const anthropicExecutor: NodeExecutor<AnthropicData> = async ({
 
   try {
     const { steps } = await step.ai.wrap(
-      "anthropic-generate-text",
+      makeStepId("anthropic-generate-text", nodeId, iterationKey),
       generateText,
       {
         model: anthropic("claude-sonnet-4-5"),

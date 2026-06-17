@@ -10,6 +10,7 @@ import { openAiExecutor } from "../components/openai/executor";
 import { anthropicExecutor } from "../components/anthropic/executor";
 import { discordExecutor } from "../components/discord/executor";
 import { slackExecutor } from "../components/slack/executor";
+import { loopExecutor } from "../components/loop/executor";
 
 export const executorRegistry: Record<NodeType, NodeExecutor> = {
   [NodeType.INITIAL]: manualTriggerExecutor,
@@ -23,6 +24,9 @@ export const executorRegistry: Record<NodeType, NodeExecutor> = {
   [NodeType.OPENAI]: openAiExecutor,
   [NodeType.DISCORD]: discordExecutor,
   [NodeType.SLACK]: slackExecutor,
+  // LOOP is orchestrated by the execution engine; this entry only satisfies the
+  // exhaustive Record<NodeType, NodeExecutor> type and must never be invoked.
+  [NodeType.LOOP]: loopExecutor,
 };
 
 export const getExecutor = (type: NodeType): NodeExecutor => {
