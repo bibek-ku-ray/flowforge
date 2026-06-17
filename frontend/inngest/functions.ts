@@ -24,6 +24,7 @@ import {
   executeWorkflowEvent,
   type ExecuteWorkflowEventData,
 } from "./events";
+import { runScan } from "@/features/triggers/components/schedule-trigger/scheduler.service";
 
 
 const workflowRealtimeChannels = [
@@ -137,5 +138,13 @@ export const executeWorkflow = inngest.createFunction(
       await publishExecutionCompleted(publish, workflowId, false);
       throw error;
     }
+  },
+);
+
+export const schedulerScan = inngest.createFunction(
+  { id: "scheduler-scan", triggers: [{ cron: "* * * * *" }] },
+  async () => {
+    await runScan(new Date());
+    return { ok: true };
   },
 );
