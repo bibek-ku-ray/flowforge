@@ -14,6 +14,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { decrypt } from "@/lib/encryption";
 import { logger } from "@/lib/logger";
+import { makeStepId } from "@/features/execution/lib/step-id";
 
 Handlebars.registerHelper("json", (context) => {
   const jsonString = JSON.stringify(context, null, 2);
@@ -38,6 +39,7 @@ export const openAiExecutor: NodeExecutor<OpenAiData> = async ({
   context,
   step,
   publish,
+  iterationKey,
 }) => {
   await publishNodeStatus(publish, workflowId, nodeId, nodeType, "loading");
 
@@ -66,7 +68,7 @@ export const openAiExecutor: NodeExecutor<OpenAiData> = async ({
   );
   const userPrompt = Handlebars.compile(userPromptTemplate)(context);
 
-  const credential = await step.run("get-credential", () => {
+  const credential = await step.run(makeStepId("get-credential", nodeId, iterationKey), () => {
     return prisma.credential.findUnique({
       where: {
         id: data.credentialId,
@@ -86,7 +88,7 @@ export const openAiExecutor: NodeExecutor<OpenAiData> = async ({
 
   try {
     const result = await step.ai.wrap(
-      "openai-generate-structured",
+      makeStepId("openai-generate-structured", nodeId, iterationKey),
       generateDiscordAiOutput,
       {
         structuredModel: openai(OPENAI_STRUCTURED_OUTPUT_MODEL),

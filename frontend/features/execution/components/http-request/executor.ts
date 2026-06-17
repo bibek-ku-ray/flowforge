@@ -3,6 +3,7 @@ import { NonRetriableError } from "inngest";
 import ky, { type Options as KyOptions } from "ky";
 import type { NodeExecutor } from "@/features/execution/types";
 import { publishNodeStatus } from "@/features/execution/lib/publish-execution-event";
+import { makeStepId } from "@/features/execution/lib/step-id";
 
 Handlebars.registerHelper("json", (context) => {
   const jsonString = JSON.stringify(context, null, 2);
@@ -26,11 +27,14 @@ export const httpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
   context,
   step,
   publish,
+  iterationKey,
 }) => {
   await publishNodeStatus(publish, workflowId, nodeId, nodeType, "loading");
 
   try {
-    const result = await step.run("http-request", async () => {
+    const result = await step.run(
+      makeStepId("http-request", nodeId, iterationKey),
+      async () => {
       if (!data.endpoint) {
         throw new NonRetriableError("HTTP Request node: No endpoint configured");
       }

@@ -153,6 +153,7 @@ enum NodeType {
   OPENAI
   DISCORD
   SLACK
+  LOOP
 }
 
 model Node {

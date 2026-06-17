@@ -6,6 +6,7 @@ import type { NodeExecutor } from "@/features/execution/types";
 import { publishNodeStatus } from "@/features/execution/lib/publish-execution-event";
 import { prisma } from "@/lib/prisma";
 import { decrypt } from "@/lib/encryption";
+import { makeStepId } from "@/features/execution/lib/step-id";
 
 Handlebars.registerHelper("json", (context) => {
   const jsonString = JSON.stringify(context, null, 2);
@@ -30,6 +31,7 @@ export const geminiExecutor: NodeExecutor<GeminiData> = async ({
   context,
   step,
   publish,
+  iterationKey,
 }) => {
   await publishNodeStatus(publish, workflowId, nodeId, nodeType, "loading");
 
@@ -53,7 +55,7 @@ export const geminiExecutor: NodeExecutor<GeminiData> = async ({
     : "You are a helpful assistant.";
   const userPrompt = Handlebars.compile(data.userPrompt)(context);
 
-  const credential = await step.run("get-credential", () => {
+  const credential = await step.run(makeStepId("get-credential", nodeId, iterationKey), () => {
     return prisma.credential.findUnique({
       where: {
         id: data.credentialId,
@@ -72,7 +74,7 @@ export const geminiExecutor: NodeExecutor<GeminiData> = async ({
 
   try {
     const { steps } = await step.ai.wrap(
-      "gemini-generate-text",
+      makeStepId("gemini-generate-text", nodeId, iterationKey),
       generateText,
       {
         model: google("gemini-2.0-flash"),

@@ -3,6 +3,7 @@ import { decode } from "html-entities";
 import { NonRetriableError } from "inngest";
 import type { NodeExecutor } from "@/features/execution/types";
 import { publishNodeStatus } from "@/features/execution/lib/publish-execution-event";
+import { makeStepId } from "@/features/execution/lib/step-id";
 import ky from "ky";
 
 Handlebars.registerHelper("json", (context) => {
@@ -26,6 +27,7 @@ export const slackExecutor: NodeExecutor<SlackData> = async ({
   context,
   step,
   publish,
+  iterationKey,
 }) => {
   await publishNodeStatus(publish, workflowId, nodeId, nodeType, "loading");
 
@@ -38,7 +40,7 @@ export const slackExecutor: NodeExecutor<SlackData> = async ({
   const content = decode(rawContent);
 
   try {
-    const result = await step.run("slack-webhook", async () => {
+    const result = await step.run(makeStepId("slack-webhook", nodeId, iterationKey), async () => {
       if (!data.webhookUrl) {
         throw new NonRetriableError("Slack node: Webhook URL is required");
       }
