@@ -1,6 +1,6 @@
 import { createId } from "@paralleldrive/cuid2";
 import { NodeType } from "@/generated/prisma/enums";
-import { GlobeIcon, MousePointerIcon } from "lucide-react";
+import { ClockIcon, GlobeIcon, MousePointerIcon } from "lucide-react";
 import { ReactNode, useCallback } from "react";
 import {
   Sheet,
@@ -42,6 +42,12 @@ const triggerNodes: NodeTypeOption[] = [
     label: "Stripe Event",
     description: "Runs the flow when a Stripe Event is captured",
     icon: "/logos/stripe.svg",
+  },
+  {
+    type: NodeType.SCHEDULE_TRIGGER,
+    label: "Schedule",
+    description: "Runs the flow on a recurring schedule",
+    icon: ClockIcon,
   },
   {
     type: NodeType.GEMINI,
