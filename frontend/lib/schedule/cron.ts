@@ -296,7 +296,7 @@ const WEEKDAY_NAMES = [
 export function describeCron(expr: string): string {
   const parsed = parseCron(expr);
   if (parsed === null) {
-    return expr;
+    return "Invalid schedule";
   }
 
   const minuteField = CRON_FIELDS[0]!;

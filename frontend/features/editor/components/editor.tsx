@@ -111,12 +111,25 @@ export const Editor = ({ workflowId }: { workflowId: string }) => {
     );
   }, [nodes]);
 
+  const hasScheduleTrigger = useMemo(() => {
+    return nodes.some((node) => node.type === NodeType.SCHEDULE_TRIGGER);
+  }, [nodes]);
+
+  // A workflow is triggerable if it has any entry-point trigger. A
+  // schedule-only workflow is valid and must not be prompted to add a manual
+  // trigger. The manual "Execute workflow" button remains gated on
+  // hasManualTrigger since a pure schedule cannot be click-run from there.
+  const isValidWorkflow = hasManualTrigger || hasScheduleTrigger;
+
   return (
     <WorkflowExecutionProvider
       syncNodeStatus={syncNodeStatus}
       resetAllNodeStatuses={resetAllNodeStatuses}
     >
-      <div className="size-full min-h-0">
+      <div
+        className="size-full min-h-0"
+        data-workflow-valid={isValidWorkflow}
+      >
         <WorkflowExecutionSubscriber workflowId={workflowId} />
         <ReactFlow
           colorMode="dark"

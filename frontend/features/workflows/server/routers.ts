@@ -11,6 +11,11 @@ import z from "zod";
 import type { Node, Edge } from "@xyflow/react";
 import { NodeType } from "@/generated/prisma/enums";
 import { claimGoogleFormId } from "@/lib/resolve-google-form-workflow";
+import {
+  computeNextRun,
+  isValidCron,
+  isValidTimezone,
+} from "@/lib/schedule/cron";
 import { TriggerKind } from "@/generated/prisma/enums";
 import {
   sendWorkflowExecution,
@@ -197,6 +202,89 @@ export const workflowsRouter = createTRPCRouter({
         input.formId,
         data,
       );
+    }),
+
+  updateScheduleTrigger: protectedProcedure
+    .input(
+      z.object({
+        workflowId: z.string(),
+        nodeId: z.string(),
+        mode: z.enum(["SIMPLE", "ADVANCED"]),
+        cronExpression: z.string().min(1),
+        timezone: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!isValidCron(input.cronExpression)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid cron expression",
+        });
+      }
+
+      if (!isValidTimezone(input.timezone)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid timezone",
+        });
+      }
+
+      const node = await prisma.node.findFirstOrThrow({
+        where: {
+          id: input.nodeId,
+          workflowId: input.workflowId,
+          type: NodeType.SCHEDULE_TRIGGER,
+          workflow: { userId: ctx.auth.user.id },
+        },
+      });
+
+      const nextRunAt = computeNextRun(
+        input.cronExpression,
+        new Date(),
+        input.timezone,
+      );
+
+      return prisma.scheduleTrigger.upsert({
+        where: { nodeId: node.id },
+        create: {
+          workflowId: input.workflowId,
+          nodeId: node.id,
+          mode: input.mode,
+          cronExpression: input.cronExpression,
+          timezone: input.timezone,
+          nextRunAt,
+        },
+        update: {
+          mode: input.mode,
+          cronExpression: input.cronExpression,
+          timezone: input.timezone,
+          nextRunAt,
+        },
+      });
+    }),
+
+  getScheduleStatus: protectedProcedure
+    .input(z.object({ nodeId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const trigger = await prisma.scheduleTrigger.findFirst({
+        where: {
+          nodeId: input.nodeId,
+          workflow: { userId: ctx.auth.user.id },
+        },
+      });
+
+      if (!trigger) {
+        return null;
+      }
+
+      return {
+        cronExpression: trigger.cronExpression,
+        timezone: trigger.timezone,
+        mode: trigger.mode,
+        enabled: trigger.enabled,
+        lastRunAt: trigger.lastRunAt,
+        nextRunAt: trigger.nextRunAt,
+      };
     }),
 
   getOne: protectedProcedure
