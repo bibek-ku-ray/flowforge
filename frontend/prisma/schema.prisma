@@ -16,6 +16,7 @@ enum TriggerKind {
   MANUAL
   GOOGLE_FORM
   STRIPE
+  SCHEDULE
 }
 
 model User {
@@ -129,9 +130,27 @@ model Workflow {
     executions Execution[]
 
   executionSnapshot WorkflowExecutionSnapshot?
+  scheduleTriggers ScheduleTrigger[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model ScheduleTrigger {
+  id             String    @id @default(cuid())
+  workflowId     String
+  workflow       Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  nodeId         String    @unique
+  mode           String    @default("SIMPLE")
+  cronExpression String
+  timezone       String    @default("UTC")
+  enabled        Boolean   @default(true)
+  lastRunAt      DateTime?
+  nextRunAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  @@index([enabled, nextRunAt])
+  @@map("schedule_trigger")
 }
 
 model WorkflowExecutionSnapshot {
@@ -148,6 +167,7 @@ enum NodeType {
   HTTP_REQUEST
   GOOGLE_FORM_TRIGGER
   STRIPE_TRIGGER
+  SCHEDULE_TRIGGER
   ANTHROPIC
   GEMINI
   OPENAI

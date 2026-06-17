@@ -22,6 +22,10 @@ const TRIGGER_LABELS: Record<TriggerKind, { title: string; description: string }
     title: "Stripe trigger",
     description: "Payment events received through the Stripe webhook.",
   },
+  [TriggerKind.SCHEDULE]: {
+    title: "Schedule trigger",
+    description: "Workflows triggered by cron schedules and intervals.",
+  },
 };
 
 export function AdminTriggersPanel() {
