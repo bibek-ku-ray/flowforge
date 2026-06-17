@@ -118,6 +118,19 @@ export function NodeSelector({
         }
       }
 
+      // Check if trying to add a schedule trigger when one already exists
+      if (selection.type === NodeType.SCHEDULE_TRIGGER) {
+        const nodes = getNodes();
+        const hasScheduleTrigger = nodes.some(
+          (node) => node.type === NodeType.SCHEDULE_TRIGGER,
+        );
+
+        if (hasScheduleTrigger) {
+          toast.error("Only one schedule trigger is allowed per workflow");
+          return;
+        }
+      }
+
       setNodes((nodes) => {
         const hasInitialTrigger = nodes.some(
           (node) => node.type === NodeType.INITIAL,
