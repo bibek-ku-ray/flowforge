@@ -15,6 +15,7 @@ import {
 import { useHasActiveSubscription } from "@/features/subscriptions/hooks/use-subscription";
 import { authClient } from "@/lib/auth-client";
 import {
+  CalendarIcon,
   Clock12Icon,
   CreditCardIcon,
   FolderOpenIcon,
@@ -43,6 +44,11 @@ const menuItems = [
         title: "Workflow",
         icon: FolderOpenIcon,
         url: "/workflows",
+      },
+      {
+        title: "Calendar",
+        icon: CalendarIcon,
+        url: "/calendar",
       },
       {
         title: "Credentials",

@@ -16,7 +16,12 @@ import {
   isValidCron,
   isValidTimezone,
 } from "@/lib/schedule/cron";
-import { TriggerKind } from "@/generated/prisma/enums";
+import {
+  ReminderDirection,
+  ReminderUnit,
+  TriggerKind,
+} from "@/generated/prisma/enums";
+import { computeFireAt } from "@/lib/reminders/offset";
 import {
   sendWorkflowExecution,
   TriggerDisabledError,
@@ -284,6 +289,90 @@ export const workflowsRouter = createTRPCRouter({
         enabled: trigger.enabled,
         lastRunAt: trigger.lastRunAt,
         nextRunAt: trigger.nextRunAt,
+      };
+    }),
+
+  /**
+   * Materialize an EVENT_TRIGGER node's config into an EventReminder row keyed
+   * by nodeId. `fireAt` is derived from the linked event's start time and the
+   * configured offset. Re-saving re-arms the reminder (clears `triggeredAt`).
+   */
+  updateEventTrigger: protectedProcedure
+    .input(
+      z.object({
+        workflowId: z.string(),
+        nodeId: z.string(),
+        eventId: z.string().min(1),
+        offsetValue: z.number().int().min(0),
+        offsetUnit: z.enum(ReminderUnit),
+        direction: z.enum(ReminderDirection),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const node = await prisma.node.findFirstOrThrow({
+        where: {
+          id: input.nodeId,
+          workflowId: input.workflowId,
+          type: NodeType.EVENT_TRIGGER,
+          workflow: { userId: ctx.auth.user.id },
+        },
+      });
+
+      const event = await prisma.calendarEvent.findFirstOrThrow({
+        where: { id: input.eventId, userId: ctx.auth.user.id },
+      });
+
+      const fireAt = computeFireAt(
+        event.startAt,
+        input.offsetValue,
+        input.offsetUnit,
+        input.direction,
+      );
+
+      return prisma.eventReminder.upsert({
+        where: { nodeId: node.id },
+        create: {
+          workflowId: input.workflowId,
+          nodeId: node.id,
+          eventId: input.eventId,
+          offsetValue: input.offsetValue,
+          offsetUnit: input.offsetUnit,
+          direction: input.direction,
+          fireAt,
+        },
+        update: {
+          eventId: input.eventId,
+          offsetValue: input.offsetValue,
+          offsetUnit: input.offsetUnit,
+          direction: input.direction,
+          fireAt,
+          triggeredAt: null,
+        },
+      });
+    }),
+
+  getEventTriggerStatus: protectedProcedure
+    .input(z.object({ nodeId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const reminder = await prisma.eventReminder.findFirst({
+        where: {
+          nodeId: input.nodeId,
+          workflow: { userId: ctx.auth.user.id },
+        },
+      });
+
+      if (!reminder) {
+        return null;
+      }
+
+      return {
+        eventId: reminder.eventId,
+        offsetValue: reminder.offsetValue,
+        offsetUnit: reminder.offsetUnit,
+        direction: reminder.direction,
+        fireAt: reminder.fireAt,
+        triggeredAt: reminder.triggeredAt,
+        enabled: reminder.enabled,
       };
     }),
 

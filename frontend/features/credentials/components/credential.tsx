@@ -62,6 +62,16 @@ const credentialTypeOptions = [
     label: "Gemini",
     logo: "/logos/gemini.svg",
   },
+  {
+    value: CredentialType.RESEND,
+    label: "Resend",
+    logo: "/logos/resend.svg",
+  },
+  {
+    value: CredentialType.GOOGLE_SHEETS,
+    label: "Google Sheets",
+    logo: "/logos/google-sheets.svg",
+  },
 ];
 
 interface CredentialFormProps {

@@ -17,6 +17,18 @@ enum TriggerKind {
   GOOGLE_FORM
   STRIPE
   SCHEDULE
+  EVENT
+}
+
+enum ReminderUnit {
+  MINUTES
+  HOURS
+  DAYS
+}
+
+enum ReminderDirection {
+  BEFORE
+  AFTER
 }
 
 model User {
@@ -35,6 +47,7 @@ model User {
   accounts      Account[]
   workflows     Workflow[]
   credentials   Credential[]
+  calendarEvents CalendarEvent[]
 
   @@map("user")
 }
@@ -116,6 +129,8 @@ enum CredentialType {
   GEMINI
   DISCORD
   SLACK
+  RESEND
+  GOOGLE_SHEETS
 }
 
 model Workflow {
@@ -130,6 +145,7 @@ model Workflow {
     executions Execution[]
 
   scheduleTriggers ScheduleTrigger[]
+  eventReminders   EventReminder[]
 
   executionSnapshot WorkflowExecutionSnapshot?
 
@@ -175,6 +191,9 @@ enum NodeType {
   DISCORD
   SLACK
   SCHEDULE_TRIGGER
+  EVENT_TRIGGER
+  EMAIL
+  GOOGLE_SHEETS
   LOOP
 }
 
@@ -239,4 +258,52 @@ model Execution {
   inngestEventId String @unique
 
   output Json?
+}
+
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?  @db.Text
+  startAt     DateTime
+  endAt       DateTime?
+  allDay      Boolean  @default(false)
+  timezone    String   @default("UTC")
+
+  reminders   EventReminder[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, startAt])
+  @@map("calendar_event")
+}
+
+model EventReminder {
+  id          String            @id @default(cuid())
+
+  eventId     String
+  event       CalendarEvent     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  workflowId  String
+  workflow    Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  nodeId      String            @unique
+
+  offsetValue Int
+  offsetUnit  ReminderUnit
+  direction   ReminderDirection
+
+  fireAt      DateTime
+  triggeredAt DateTime?
+  enabled     Boolean           @default(true)
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([triggeredAt, fireAt])
+  @@index([eventId])
+  @@map("event_reminder")
 }
