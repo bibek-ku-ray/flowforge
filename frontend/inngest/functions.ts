@@ -10,6 +10,7 @@ import { httpRequestChannel } from "./channels/http-request";
 import { manualTriggerChannel } from "./channels/manual-trigger";
 import { googleFormTriggerChannel } from "./channels/google-form-trigger";
 import { stripeTriggerChannel } from "./channels/stripe-trigger";
+import { scheduleTriggerChannel } from "./channels/schedule-trigger";
 import { geminiChannel } from "./channels/gemini";
 import { openAiChannel } from "./channels/openai";
 import { anthropicChannel } from "./channels/anthropic";
@@ -30,6 +31,7 @@ const workflowRealtimeChannels = [
   manualTriggerChannel,
   googleFormTriggerChannel,
   stripeTriggerChannel,
+  scheduleTriggerChannel,
   geminiChannel,
   openAiChannel,
   anthropicChannel,
