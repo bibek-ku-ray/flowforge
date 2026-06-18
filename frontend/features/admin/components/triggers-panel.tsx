@@ -26,6 +26,10 @@ const TRIGGER_LABELS: Record<TriggerKind, { title: string; description: string }
     title: "Schedule trigger",
     description: "Workflows triggered by cron schedules and intervals.",
   },
+  [TriggerKind.EVENT]: {
+    title: "Event reminder trigger",
+    description: "Workflows fired by calendar event reminders.",
+  },
 };
 
 export function AdminTriggersPanel() {

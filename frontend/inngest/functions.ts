@@ -13,6 +13,9 @@ import { manualTriggerChannel } from "./channels/manual-trigger";
 import { googleFormTriggerChannel } from "./channels/google-form-trigger";
 import { stripeTriggerChannel } from "./channels/stripe-trigger";
 import { scheduleTriggerChannel } from "./channels/schedule-trigger";
+import { eventTriggerChannel } from "./channels/event-trigger";
+import { emailChannel } from "./channels/email";
+import { googleSheetsChannel } from "./channels/google-sheets";
 import { geminiChannel } from "./channels/gemini";
 import { openAiChannel } from "./channels/openai";
 import { anthropicChannel } from "./channels/anthropic";
@@ -27,6 +30,7 @@ import {
   type ExecuteWorkflowEventData,
 } from "./events";
 import { runScan } from "@/features/triggers/components/schedule-trigger/scheduler.service";
+import { runReminderScan } from "@/features/triggers/components/event-trigger/reminder.service";
 
 
 const workflowRealtimeChannels = [
@@ -35,6 +39,9 @@ const workflowRealtimeChannels = [
   googleFormTriggerChannel,
   stripeTriggerChannel,
   scheduleTriggerChannel,
+  eventTriggerChannel,
+  emailChannel,
+  googleSheetsChannel,
   geminiChannel,
   openAiChannel,
   anthropicChannel,
@@ -164,7 +171,18 @@ export const executeWorkflow = inngest.createFunction(
 export const schedulerScan = inngest.createFunction(
   { id: "scheduler-scan", triggers: [{ cron: "* * * * *" }] },
   async () => {
-    await runScan(new Date());
-    return { ok: true };
+    const now = new Date();
+    // Reuse the single cron tick for both recurring schedules and event
+    // reminders — one scheduler, two scan passes. Each pass is self-contained
+    // and isolates its own errors, so a failure in one cannot abort the other.
+    const [scheduleResult, reminderResult] = await Promise.allSettled([
+      runScan(now),
+      runReminderScan(now),
+    ]);
+    return {
+      ok: true,
+      schedules: scheduleResult.status,
+      reminders: reminderResult.status,
+    };
   },
 );

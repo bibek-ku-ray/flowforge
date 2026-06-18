@@ -1,6 +1,14 @@
 import { createId } from "@paralleldrive/cuid2";
 import { NodeType } from "@/generated/prisma/enums";
-import { ClockIcon, GlobeIcon, MousePointerIcon, RepeatIcon } from "lucide-react";
+import {
+  CalendarClockIcon,
+  ClockIcon,
+  GlobeIcon,
+  MailIcon,
+  MousePointerIcon,
+  RepeatIcon,
+  SheetIcon,
+} from "lucide-react";
 import { ReactNode, useCallback } from "react";
 import {
   Sheet,
@@ -50,6 +58,12 @@ const triggerNodes: NodeTypeOption[] = [
     icon: ClockIcon,
   },
   {
+    type: NodeType.EVENT_TRIGGER,
+    label: "Event Reminder",
+    description: "Runs the flow relative to a calendar event",
+    icon: CalendarClockIcon,
+  },
+  {
     type: NodeType.GEMINI,
     label: "Gemini",
     description: "Uses Google Gemini to generate text",
@@ -94,6 +108,18 @@ const executionNodes: NodeTypeOption[] = [
     description: "Run downstream nodes once per item in an array",
     icon: RepeatIcon,
   },
+  {
+    type: NodeType.EMAIL,
+    label: "Email",
+    description: "Send an email via Resend",
+    icon: MailIcon,
+  },
+  {
+    type: NodeType.GOOGLE_SHEETS,
+    label: "Google Sheets",
+    description: "Read rows from a spreadsheet",
+    icon: SheetIcon,
+  },
 ];
 
 interface NodeSelectorProps {
@@ -133,6 +159,19 @@ export function NodeSelector({
 
         if (hasScheduleTrigger) {
           toast.error("Only one schedule trigger is allowed per workflow");
+          return;
+        }
+      }
+
+      // Check if trying to add an event trigger when one already exists
+      if (selection.type === NodeType.EVENT_TRIGGER) {
+        const nodes = getNodes();
+        const hasEventTrigger = nodes.some(
+          (node) => node.type === NodeType.EVENT_TRIGGER,
+        );
+
+        if (hasEventTrigger) {
+          toast.error("Only one event reminder trigger is allowed per workflow");
           return;
         }
       }

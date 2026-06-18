@@ -9,6 +9,7 @@ export const TRIGGER_KINDS = [
   TriggerKind.GOOGLE_FORM,
   TriggerKind.STRIPE,
   TriggerKind.SCHEDULE,
+  TriggerKind.EVENT,
 ] as const;
 
 export const NODE_TYPE_TO_TRIGGER_KIND: Partial<
@@ -18,6 +19,7 @@ export const NODE_TYPE_TO_TRIGGER_KIND: Partial<
   [NodeType.GOOGLE_FORM_TRIGGER]: TriggerKind.GOOGLE_FORM,
   [NodeType.STRIPE_TRIGGER]: TriggerKind.STRIPE,
   [NodeType.SCHEDULE_TRIGGER]: TriggerKind.SCHEDULE,
+  [NodeType.EVENT_TRIGGER]: TriggerKind.EVENT,
 };
 
 export class TriggerDisabledError extends Error {

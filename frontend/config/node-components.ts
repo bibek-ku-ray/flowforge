@@ -4,6 +4,9 @@ import { GoogleFormTrigger } from "@/features/triggers/components/google-form-tr
 import { ManualTriggerNode } from "@/features/triggers/components/manual-trigger/node";
 import { StripeTriggerNode } from "@/features/triggers/components/stripe-trigger/node";
 import { ScheduleTriggerNode } from "@/features/triggers/components/schedule-trigger/node";
+import { EventTriggerNode } from "@/features/triggers/components/event-trigger/node";
+import { EmailNode } from "@/features/execution/components/email/node";
+import { GoogleSheetsNode } from "@/features/execution/components/google-sheets/node";
 import { GeminiNode } from "@/features/execution/components/gemini/node";
 import { OpenAiNode } from "@/features/execution/components/openai/node";
 import { AnthropicNode } from "@/features/execution/components/anthropic/node";
@@ -20,6 +23,9 @@ export const nodeComponents = {
   [NodeType.GOOGLE_FORM_TRIGGER]: GoogleFormTrigger,
   [NodeType.STRIPE_TRIGGER]: StripeTriggerNode,
   [NodeType.SCHEDULE_TRIGGER]: ScheduleTriggerNode,
+  [NodeType.EVENT_TRIGGER]: EventTriggerNode,
+  [NodeType.EMAIL]: EmailNode,
+  [NodeType.GOOGLE_SHEETS]: GoogleSheetsNode,
   [NodeType.GEMINI]: GeminiNode,
   [NodeType.OPENAI]: OpenAiNode,
   [NodeType.ANTHROPIC]: AnthropicNode,
